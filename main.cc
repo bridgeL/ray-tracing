@@ -82,6 +82,9 @@ int main()
     cam.focus_dist = 10.0;
 
     ScopedTimer timer("Render time: ");
-    cam.render(world);
+    cam.render(world, true);
     timer.stop_timer();
+
+    cam.save_image("output.png");
+    cam.display_image(0);
 }

@@ -2,6 +2,8 @@
 
 ## Project Overview
 
+![img](doc/1.png)
+
 Our goal is to implement an optimized ray tracer based on **Ray Tracing in One Weekend** framework [^rtweekend], with:
 
 - **Core optimizations**:
@@ -27,7 +29,7 @@ sudo apt install libeigen3-dev
 ```
 mkdir build
 cd build
-export BUILD_MODE=Release && cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 ./task1
 ```

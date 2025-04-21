@@ -18,14 +18,13 @@ public:
     double defocus_angle = 0; // Variation angle of rays through each pixel
     double focus_dist = 10;   // Distance from camera lookfrom point to plane of perfect focus
 
-    void render(const hittable_list &world)
+    void render(const hittable_list &world, bool display)
     {
         initialize();
 
         std::cout << "image size: " << image_width << ' ' << image_height << "\nPush any key to cancel\n";
 
         std::shared_ptr<BVHNode> bvh_tree = world.create_bvh_tree();
-        bool interupted = false;
 
         for (int j = 0; j < image_height; j++)
         {
@@ -44,34 +43,22 @@ public:
                 // write_color(std::cout, pixel_samples_scale * pixel_color);
                 set_pixel(j, i, pixel_samples_scale * pixel_color);
             }
-            
-            if (j > 0 && j % 10 == 0)
-            {
-                interupted = !display();
-                if (interupted)
-                    break;
-            }
+
+            if (display && j > 0 && j % 10 == 0)
+                display_image(1);
         }
 
-        if (!interupted)
-        {
-            std::clog << "\rDone.                 \n";
-            save("output.png");
-        }
-        else
-        {
-            std::clog << "\rCanceled.                 \n";
-        }
+        std::clog << "\rDone.                 \n";
     }
 
-    bool display()
+    void display_image(int delay)
     {
         cv::Mat image(image_height, image_width, CV_32FC3, frame_buf.data());
         cv::imshow("image", image);
-        return (cv::waitKey(1) == -1);
+        cv::waitKey(delay);
     }
 
-    void save(const std::string &filename)
+    void save_image(const std::string &filename)
     {
         cv::Mat image(image_height, image_width, CV_32FC3, frame_buf.data());
         image.convertTo(image, CV_8UC3, 255.0f);
