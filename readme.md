@@ -1,13 +1,5 @@
 # Ray-Tracing
 
-## Todo List
-
-- [x] basic framework
-- [ ] .obj loader 
-- [ ] BVH optimize
-- [ ] PBR material
-- [ ] OpenMP
-
 ## Project Overview
 
 Our goal is to implement an optimized ray tracer based on **Ray Tracing in One Weekend** framework [^rtweekend], with:
