@@ -18,12 +18,14 @@ public:
     double defocus_angle = 0; // Variation angle of rays through each pixel
     double focus_dist = 10;   // Distance from camera lookfrom point to plane of perfect focus
 
-    void render(const hittable &world)
+    void render(const hittable_list &world)
     {
         initialize();
 
         std::cout << "P3\n"
                   << image_width << ' ' << image_height << "\n255\n";
+
+        std::shared_ptr<BVHNode> bvh_tree = world.create_bvh_tree();
 
         for (int j = 0; j < image_height; j++)
         {
@@ -34,7 +36,7 @@ public:
                 for (int sample = 0; sample < samples_per_pixel; sample++)
                 {
                     ray r = get_ray(i, j);
-                    pixel_color += ray_color(r, max_depth, world);
+                    pixel_color += ray_color(r, max_depth, bvh_tree);
                 }
                 // write_color(std::cout, pixel_samples_scale * pixel_color);
                 set_pixel(j, i, pixel_samples_scale * pixel_color);
@@ -170,14 +172,14 @@ private:
         return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
     }
 
-    Vector3f ray_color(const ray &r, int depth, const hittable &world) const
+    Vector3f ray_color(const ray &r, int depth, const std::shared_ptr<BVHNode> &bvh_tree) const
     {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if (depth <= 0)
             return Vector3f(0, 0, 0);
 
         hit_record rec;
-        bool hit_anything = world.hit(r, interval(0.001, infinity), rec);
+        bool hit_anything = bvh_tree->hit(r, interval(0.001, infinity), rec);
 
         if (!hit_anything)
         {
@@ -189,7 +191,7 @@ private:
         ray scattered;
         Vector3f attenuation;
         if (rec.mat->scatter(r, rec, attenuation, scattered))
-            return rec.mat->mix_color(attenuation, ray_color(scattered, depth - 1, world));
+            return rec.mat->mix_color(attenuation, ray_color(scattered, depth - 1, bvh_tree));
         return Vector3f(0, 0, 0);
     }
 };

@@ -62,6 +62,19 @@ public:
         texture_coords[2] = t2;
     }
 
+    bbox get_bbox() const override
+    {
+        return bbox(
+            Vector3f(
+                std::min({vertices[0][0], vertices[1][0], vertices[2][0]}),
+                std::min({vertices[0][1], vertices[1][1], vertices[2][1]}),
+                std::min({vertices[0][2], vertices[1][2], vertices[2][2]})),
+            Vector3f(
+                std::max({vertices[0][0], vertices[1][0], vertices[2][0]}),
+                std::max({vertices[0][1], vertices[1][1], vertices[2][1]}),
+                std::max({vertices[0][2], vertices[1][2], vertices[2][2]})));
+    }
+
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
         Vector3f p1 = vertices[0];
