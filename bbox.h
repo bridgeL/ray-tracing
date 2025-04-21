@@ -12,7 +12,8 @@ public:
 
     bbox(Vector3f min, Vector3f max) : min(min), max(max) {}
 
-    Vector3f center() const {
+    Vector3f center() const
+    {
         return 0.5f * (min + max);
     }
 
@@ -25,6 +26,12 @@ public:
             if (b.min[i] < min[i])
                 min[i] = b.min[i];
         }
+    }
+
+    float surface_area() const
+    {
+        Vector3f d = max - min;
+        return 2.0f * (d.x() * d.y() + d.x() * d.z() + d.y() * d.z());
     }
 
     int longest_axis() const

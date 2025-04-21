@@ -133,17 +133,92 @@ private:
         const std::vector<std::shared_ptr<hittable>> &objects,
         size_t start, size_t end)
     {
-        // 实现SAH分割策略...
-        bbox total_box = bbox::empty;
+        constexpr int BINS = 12; // 通常12-32个bin足够
+        constexpr float traversal_cost = 1.0f;
+        constexpr float intersection_cost = 1.2f;
+
+        float best_cost = std::numeric_limits<float>::infinity();
+        int best_axis = 0;
+        float best_split = 0.0f;
+
+        // 计算全局包围盒
+        bbox global_box;
         for (size_t i = start; i < end; ++i)
         {
-            total_box.expand_box(objects[i]->box);
+            global_box.expand_box(objects[i]->box);
         }
 
-        int axis = total_box.longest_axis();
-        float split_pos = total_box.center()[axis];
+        // 遍历三个轴
+        for (int axis = 0; axis < 3; ++axis)
+        {
+            // 跳过过小的轴
+            if (global_box.max[axis] - global_box.min[axis] < 0.001f)
+                continue;
 
-        return {axis, split_pos};
+            // 初始化bins
+            struct Bin
+            {
+                bbox bounds;
+                int count = 0;
+            };
+            std::vector<Bin> bins(BINS);
+
+            // 填充bins
+            float scale = BINS / (global_box.max[axis] - global_box.min[axis]);
+            for (size_t i = start; i < end; ++i)
+            {
+                int bin_idx = std::min(BINS - 1,
+                                       static_cast<int>((objects[i]->box.center()[axis] - global_box.min[axis]) * scale));
+                bins[bin_idx].bounds.expand_box(objects[i]->box);
+                bins[bin_idx].count++;
+            }
+
+            // 计算前缀和后缀信息
+            std::vector<bbox> left_accum(BINS);
+            std::vector<int> left_count(BINS, 0);
+            bbox left_box;
+            int left_total = 0;
+
+            for (int i = 0; i < BINS; ++i)
+            {
+                left_box.expand_box(bins[i].bounds);
+                left_accum[i] = left_box;
+                left_total += bins[i].count;
+                left_count[i] = left_total;
+            }
+
+            std::vector<bbox> right_accum(BINS);
+            std::vector<int> right_count(BINS, 0);
+            bbox right_box;
+            int right_total = 0;
+
+            for (int i = BINS - 1; i >= 0; --i)
+            {
+                right_box.expand_box(bins[i].bounds);
+                right_accum[i] = right_box;
+                right_total += bins[i].count;
+                right_count[i] = right_total;
+            }
+
+            // 评估分割位置
+            for (int i = 1; i < BINS; ++i)
+            {
+                float cost = traversal_cost +
+                             (left_accum[i - 1].surface_area() * left_count[i - 1] +
+                              right_accum[i].surface_area() * right_count[i]) *
+                                 intersection_cost;
+
+                if (cost < best_cost)
+                {
+                    best_cost = cost;
+                    best_axis = axis;
+                    best_split = global_box.min[axis] + (i / static_cast<float>(BINS)) *
+                                                            (global_box.max[axis] - global_box.min[axis]);
+                }
+            }
+        }
+
+        return {best_axis, best_split};
     }
 
     size_t partition_objects(
@@ -151,12 +226,13 @@ private:
         size_t start, size_t end,
         int axis, float split_pos)
     {
-        auto mid = std::partition(objects.begin() + start,
-                                  objects.begin() + end,
-                                  [axis, split_pos](const auto &obj)
-                                  {
-                                      return obj->box.center()[axis] < split_pos;
-                                  });
+        auto mid = std::partition(
+            objects.begin() + start,
+            objects.begin() + end,
+            [axis, split_pos](const auto &obj)
+            {
+                return obj->box.center()[axis] < split_pos;
+            });
         return mid - objects.begin();
     }
 };
