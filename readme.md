@@ -14,6 +14,24 @@ Our goal is to implement an optimized ray tracer based on **Ray Tracing in One W
 
 ---
 
+## Installation
+
+```
+sudo apt install -y cmake g++ gdb
+sudo apt install libopencv-dev
+sudo apt install libeigen3-dev
+```
+
+## How to run
+
+```
+mkdir build
+cd build
+cmake ..
+make
+./task1
+```
+
 ## Technical Approach
 
 ### Base Framework
