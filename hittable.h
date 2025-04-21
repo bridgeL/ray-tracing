@@ -20,7 +20,7 @@ public:
 
     virtual bool hit(const ray &r, interval ray_t, hit_record &rec) const = 0;
 
-    virtual bbox get_bbox() const = 0;
+    bbox box;
 };
 
 #endif

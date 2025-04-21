@@ -25,7 +25,7 @@ public:
         box = bbox::empty;
         for (const auto &obj : objects)
         {
-            box.expand_box(obj->get_bbox());
+            box.expand_box(obj->box);
         }
     }
 
@@ -38,7 +38,7 @@ public:
         box = bbox::empty;
         for (size_t i = start; i < end; i++)
         {
-            box.expand_box(src_objects[i]->get_bbox());
+            box.expand_box(src_objects[i]->box);
         }
 
         // 2. 判断是否终止递归
@@ -113,19 +113,19 @@ private:
     static bool box_x_compare(const std::shared_ptr<hittable> a,
                               const std::shared_ptr<hittable> b)
     {
-        return a->get_bbox().min.x() < b->get_bbox().min.x();
+        return a->box.min.x() < b->box.min.x();
     }
 
     static bool box_y_compare(const std::shared_ptr<hittable> a,
                               const std::shared_ptr<hittable> b)
     {
-        return a->get_bbox().min.y() < b->get_bbox().min.y();
+        return a->box.min.y() < b->box.min.y();
     }
 
     static bool box_z_compare(const std::shared_ptr<hittable> a,
                               const std::shared_ptr<hittable> b)
     {
-        return a->get_bbox().min.z() < b->get_bbox().min.z();
+        return a->box.min.z() < b->box.min.z();
     }
 
     // SAH分割优化
@@ -137,7 +137,7 @@ private:
         bbox total_box = bbox::empty;
         for (size_t i = start; i < end; ++i)
         {
-            total_box.expand_box(objects[i]->get_bbox());
+            total_box.expand_box(objects[i]->box);
         }
 
         int axis = total_box.longest_axis();
@@ -155,7 +155,7 @@ private:
                                   objects.begin() + end,
                                   [axis, split_pos](const auto &obj)
                                   {
-                                      return obj->get_bbox().center()[axis] < split_pos;
+                                      return obj->box.center()[axis] < split_pos;
                                   });
         return mid - objects.begin();
     }
