@@ -22,10 +22,10 @@ public:
     {
         initialize();
 
-        std::cout << "P3\n"
-                  << image_width << ' ' << image_height << "\n255\n";
+        std::cout << "image size: " << image_width << ' ' << image_height << "\nPush any key to cancel\n";
 
         std::shared_ptr<BVHNode> bvh_tree = world.create_bvh_tree();
+        bool interupted = false;
 
         for (int j = 0; j < image_height; j++)
         {
@@ -36,27 +36,42 @@ public:
                 for (int sample = 0; sample < samples_per_pixel; sample++)
                 {
                     ray r = get_ray(i, j);
-                    pixel_color += ray_color(r, max_depth, bvh_tree);
+
+                    // 调试对比
+                    pixel_color += ray_color_without_bvh(r, max_depth, world);
+                    // pixel_color += ray_color(r, max_depth, bvh_tree);
                 }
                 // write_color(std::cout, pixel_samples_scale * pixel_color);
                 set_pixel(j, i, pixel_samples_scale * pixel_color);
             }
             if (j > 0 && j % 10 == 0)
-                display();
+            {
+                interupted = !display();
+                if (interupted)
+                    break;
+            }
         }
 
-        std::clog << "\rDone.                 \n";
+        if (!interupted)
+        {
 
-        display();
-        save("output.png");
-        cv::waitKey();
+            std::clog << "\rDone.                 \n";
+
+            display();
+            save("output.png");
+            cv::waitKey();
+        }
+        else
+        {
+            std::clog << "\rCanceled.                 \n";
+        }
     }
 
-    void display()
+    bool display()
     {
         cv::Mat image(image_height, image_width, CV_32FC3, frame_buf.data());
         cv::imshow("image", image);
-        cv::waitKey(1);
+        return (cv::waitKey(1) == -1);
     }
 
     void save(const std::string &filename)
@@ -194,6 +209,31 @@ private:
             return rec.mat->mix_color(attenuation, ray_color(scattered, depth - 1, bvh_tree));
         return Vector3f(0, 0, 0);
     }
+
+    Vector3f ray_color_without_bvh(const ray &r, int depth, const hittable_list &world) const
+    {
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if (depth <= 0)
+            return Vector3f(0, 0, 0);
+
+        hit_record rec;
+        bool hit_anything = world.hit(r, interval(0.001, infinity), rec);
+
+        if (!hit_anything)
+        {
+            Vector3f unit_direction = r.direction().normalized();
+            auto a = 0.5 * (unit_direction.y() + 1.0);
+            return (1.0 - a) * Vector3f(1.0, 1.0, 1.0) + a * Vector3f(0.5, 0.7, 1.0);
+        }
+
+        ray scattered;
+        Vector3f attenuation;
+        if (rec.mat->scatter(r, rec, attenuation, scattered))
+            return rec.mat->mix_color(attenuation, ray_color_without_bvh(scattered, depth - 1, world));
+        return Vector3f(0, 0, 0);
+    }
+
+
 };
 
 #endif

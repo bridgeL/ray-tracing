@@ -16,10 +16,11 @@ public:
     shared_ptr<BVHNode> left;
     shared_ptr<BVHNode> right;
     std::vector<shared_ptr<hittable>> objects; // 中间节点不存值，只有叶子节点会存
+    int obj_num;                               // 便于调试和查看性能变化
 
     // 叶子节点构造函数
     BVHNode(std::vector<std::shared_ptr<hittable>> objs)
-        : type(BVHNodeType::LEAF), objects(std::move(objs))
+        : type(BVHNodeType::LEAF), objects(std::move(objs)), obj_num(objs.size())
     {
         // 计算叶子节点的包围盒
         box = bbox::empty;
@@ -32,7 +33,7 @@ public:
     // 递归构建函数
     BVHNode(std::vector<std::shared_ptr<hittable>> src_objects,
             size_t start, size_t end,
-            int max_leaf_size = 5)
+            int max_leaf_size = 5) : obj_num(end - start)
     {
         // 1. 计算当前节点包围盒
         box = bbox::empty;
@@ -87,6 +88,9 @@ public:
     {
         if (!box.hit(r, ray_t))
             return false;
+
+        // // 调试
+        // std::cout << obj_num << std::endl;
 
         if (type == BVHNodeType::LEAF)
         {
