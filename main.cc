@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "triangle.h"
 #include "sphere.h"
+#include "timer.h"
 
 int main()
 {
@@ -10,21 +11,25 @@ int main()
     auto ground_material = make_shared<lambertian>(Vector3f(0.7, 0.7, 0.7));
     world.add(make_shared<sphere>(Vector3f(0, -1000, 0), 1000, ground_material));
 
-    auto m1 = make_shared<metal>(Vector3f(0.7, 0.6, 0.5), 0.0);
-    world.add(make_shared<sphere>(Vector3f(-2, 2, 1), 1, m1));
+    {
+        auto m1 = make_shared<metal>(Vector3f(0.7, 0.6, 0.5), 0.0);
+        world.add(make_shared<sphere>(Vector3f(-2, 2, 1), 1, m1));
+    }
 
-    auto image_data = cv::imread("../model/texture.png");
-    cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
-    image_data = image_data / 255;
-    auto m2 = make_shared<textured_lambertian>(image_data);
-    world.add(make_shared<triangle>(
-        Vector3f(-3, 1, 0),
-        Vector3f(0, 3, 0),
-        Vector3f(0, 1, -3),
-        Vector2f(0, 0),
-        Vector2f(0, 1),
-        Vector2f(1, 1),
-        m2));
+    {
+        auto image_data = cv::imread("../model/texture.png");
+        cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
+        image_data = image_data / 255;
+        auto m2 = make_shared<textured_lambertian>(image_data);
+        world.add(make_shared<triangle>(
+            Vector3f(-3, 1, 0),
+            Vector3f(0, 3, 0),
+            Vector3f(0, 1, -3),
+            Vector2f(0, 0),
+            Vector2f(0, 1),
+            Vector2f(1, 1),
+            m2));
+    }
 
     for (int a = -11; a < 11; a++)
     {
@@ -76,5 +81,7 @@ int main()
     cam.defocus_angle = 0;
     cam.focus_dist = 10.0;
 
+    ScopedTimer timer("Render time: ");
     cam.render(world);
+    timer.stop_timer();
 }

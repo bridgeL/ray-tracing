@@ -27,7 +27,7 @@ sudo apt install libeigen3-dev
 ```
 mkdir build
 cd build
-cmake ..
+export BUILD_MODE=Release && cmake ..
 make
 ./task1
 ```

@@ -38,12 +38,13 @@ public:
                     ray r = get_ray(i, j);
 
                     // 调试对比
-                    pixel_color += ray_color_without_bvh(r, max_depth, world);
-                    // pixel_color += ray_color(r, max_depth, bvh_tree);
+                    // pixel_color += ray_color_without_bvh(r, max_depth, world);
+                    pixel_color += ray_color(r, max_depth, bvh_tree);
                 }
                 // write_color(std::cout, pixel_samples_scale * pixel_color);
                 set_pixel(j, i, pixel_samples_scale * pixel_color);
             }
+            
             if (j > 0 && j % 10 == 0)
             {
                 interupted = !display();
@@ -54,12 +55,8 @@ public:
 
         if (!interupted)
         {
-
             std::clog << "\rDone.                 \n";
-
-            display();
             save("output.png");
-            cv::waitKey();
         }
         else
         {
@@ -232,8 +229,6 @@ private:
             return rec.mat->mix_color(attenuation, ray_color_without_bvh(scattered, depth - 1, world));
         return Vector3f(0, 0, 0);
     }
-
-
 };
 
 #endif
