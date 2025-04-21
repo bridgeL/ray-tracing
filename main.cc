@@ -1,0 +1,50 @@
+#include "global.h"
+#include "camera.h"
+#include "triangle.h"
+#include "sphere.h"
+
+int main()
+{
+    hittable_list world;
+
+    auto ground_material = make_shared<lambertian>(Vector3f(0.7, 0.7, 0.7));
+    world.add(make_shared<sphere>(Vector3f(0, -1000, 0), 1000, ground_material));
+
+    auto material1 = make_shared<metal>(Vector3f(0.7, 0.6, 0.5), 0.0);
+    world.add(make_shared<sphere>(Vector3f(0, 0.3, 0), 0.3, material1));
+
+    auto image_data = cv::imread("../model/texture.png");
+    cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
+    image_data = image_data / 255;
+    auto material2 = make_shared<textured_lambertian>(image_data);
+    world.add(make_shared<triangle>(
+        Vector3f(-3, 1, 0), 
+        Vector3f(0, 3, 0), 
+        Vector3f(0, 1, -3), 
+        Vector2f(0, 0), 
+        Vector2f(0, 1), 
+        Vector2f(1, 1),
+        material2));
+
+    camera cam;
+
+    // cam.aspect_ratio      = 16.0 / 9.0;
+    cam.aspect_ratio = 1.0 / 1.0;
+    // cam.image_width       = 1200;
+    cam.image_width = 512;
+    // cam.samples_per_pixel = 10;
+    cam.samples_per_pixel = 10;
+    // cam.max_depth         = 20;
+    cam.max_depth = 5;
+
+    cam.vfov = 20;
+    cam.lookfrom = Vector3f(10, 2, 3);
+    cam.lookat = Vector3f(0, 1, 0);
+    cam.vup = Vector3f(0, 1, 0);
+
+    // cam.defocus_angle = 0.6;
+    cam.defocus_angle = 0;
+    cam.focus_dist = 10.0;
+
+    cam.render(world);
+}
