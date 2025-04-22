@@ -78,8 +78,11 @@ int main()
     cam.vup = Vector3f(0, 1, 0);
 
     // cam.defocus_angle = 0.6;
-    cam.defocus_angle = 0;
+    cam.defocus_angle = 0;  // 关闭失焦效果
     cam.focus_dist = 10.0;
+
+    cam.fisheye_enabled = true;    // 启用鱼眼
+    cam.fisheye_fov = 220.0;       // 220度鱼眼效果
 
     ScopedTimer timer("Render time: ");
     cam.render(world, true);

@@ -13,10 +13,16 @@ public:
     Vector3f lookfrom = Vector3f(0, 0, 0); // Point camera is looking from
     Vector3f lookat = Vector3f(0, 0, -1);  // Point camera is looking at
     Vector3f vup = Vector3f(0, 1, 0);      // Camera-relative "up" direction
-    std::vector<Vector3f> frame_buf;
 
     double defocus_angle = 0; // Variation angle of rays through each pixel
     double focus_dist = 10;   // Distance from camera lookfrom point to plane of perfect focus
+
+    // 存储像素颜色
+    std::vector<Vector3f> frame_buf;
+
+    // 新增鱼眼参数
+    bool fisheye_enabled = false; // 是否启用鱼眼
+    double fisheye_fov = 180.0;   // 鱼眼视场角（通常180-360度）
 
     void render(const hittable_list &world, bool display)
     {
@@ -130,16 +136,49 @@ private:
 
     ray get_ray(int i, int j) const
     {
-        // Construct a camera ray originating from the defocus disk and directed at a randomly
-        // sampled point around the pixel location i, j.
+        if (!fisheye_enabled)
+        {
+            // 原有透视投影逻辑
+            auto offset = sample_square();
+            auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u) + ((j + offset.y()) * pixel_delta_v);
+            auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
+            return ray(ray_origin, (pixel_sample - ray_origin).normalized());
+        }
+        else
+        {
+            // 鱼眼特效模式
+            return get_fisheye_ray(i, j);
+        }
+    }
 
-        auto offset = sample_square();
-        auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u) + ((j + offset.y()) * pixel_delta_v);
+    ray get_fisheye_ray(int i, int j) const
+    {
+        // 将像素坐标归一化到[-1,1]
+        double nx = 2.0 * (i + 0.5) / image_width - 1.0;
+        // double ny = 2.0 * (j + 0.5) / image_height - 1.0;
+        double ny = 1.0 - 2.0 * (j + 0.5) / image_height;
+        // 计算极坐标
+        double r = sqrt(nx * nx + ny * ny);
+        double theta = r * degrees_to_radians(fisheye_fov / 2.0);
 
-        auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
-        auto ray_direction = pixel_sample - ray_origin;
+        // 防止超出有效范围
+        if (r > 1e-6)
+        {
+            double sin_theta = sin(theta);
+            double cos_theta = cos(theta);
+            double phi = atan2(ny, nx);
 
-        return ray(ray_origin, ray_direction);
+            // 计算射线方向（相机坐标系）
+            Vector3f ray_dir = Vector3f(
+                sin_theta * cos(phi),
+                sin_theta * sin(phi),
+                -cos_theta);
+
+            // 转换到世界坐标系
+            ray_dir = u * ray_dir.x() + v * ray_dir.y() + w * ray_dir.z();
+            return ray(center, ray_dir.normalized());
+        }
+        return ray(center, -w); // 中心直接向前
     }
 
     Vector3f sample_square() const
