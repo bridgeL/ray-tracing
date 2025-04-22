@@ -3,6 +3,7 @@
 #include "triangle.h"
 #include "sphere.h"
 #include "timer.h"
+#include "objloader.h"
 
 int main()
 {
