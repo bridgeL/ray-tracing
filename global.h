@@ -82,8 +82,10 @@ inline Vector2f interpolate(const Vector3f &weight, const Vector2f &p1, const Ve
 
 #include "interval.h"
 #include "ray.h"
+#include "bbox.h"
 #include "hittable.h"
 #include "hittable_list.h"
 #include "material.h"
+#include "bvh.h"
 
 #endif

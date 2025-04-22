@@ -18,12 +18,13 @@ public:
     double defocus_angle = 0; // Variation angle of rays through each pixel
     double focus_dist = 10;   // Distance from camera lookfrom point to plane of perfect focus
 
-    void render(const hittable &world)
+    void render(const hittable_list &world, bool display)
     {
         initialize();
 
-        std::cout << "P3\n"
-                  << image_width << ' ' << image_height << "\n255\n";
+        std::cout << "image size: " << image_width << ' ' << image_height << "\nPush any key to cancel\n";
+
+        std::shared_ptr<BVHNode> bvh_tree = world.create_bvh_tree();
 
         for (int j = 0; j < image_height; j++)
         {
@@ -34,30 +35,30 @@ public:
                 for (int sample = 0; sample < samples_per_pixel; sample++)
                 {
                     ray r = get_ray(i, j);
-                    pixel_color += ray_color(r, max_depth, world);
+
+                    // 调试对比
+                    // pixel_color += ray_color_without_bvh(r, max_depth, world);
+                    pixel_color += ray_color(r, max_depth, bvh_tree);
                 }
                 // write_color(std::cout, pixel_samples_scale * pixel_color);
                 set_pixel(j, i, pixel_samples_scale * pixel_color);
             }
-            if (j > 0 && j % 10 == 0)
-                display();
+
+            if (display && j > 0 && j % 10 == 0)
+                display_image(1);
         }
 
         std::clog << "\rDone.                 \n";
-
-        display();
-        save("output.png");
-        cv::waitKey();
     }
 
-    void display()
+    void display_image(int delay)
     {
         cv::Mat image(image_height, image_width, CV_32FC3, frame_buf.data());
         cv::imshow("image", image);
-        cv::waitKey(1);
+        cv::waitKey(delay);
     }
 
-    void save(const std::string &filename)
+    void save_image(const std::string &filename)
     {
         cv::Mat image(image_height, image_width, CV_32FC3, frame_buf.data());
         image.convertTo(image, CV_8UC3, 255.0f);
@@ -170,7 +171,30 @@ private:
         return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
     }
 
-    Vector3f ray_color(const ray &r, int depth, const hittable &world) const
+    Vector3f ray_color(const ray &r, int depth, const std::shared_ptr<BVHNode> &bvh_tree) const
+    {
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if (depth <= 0)
+            return Vector3f(0, 0, 0);
+
+        hit_record rec;
+        bool hit_anything = bvh_tree->hit(r, interval(0.001, infinity), rec);
+
+        if (!hit_anything)
+        {
+            Vector3f unit_direction = r.direction().normalized();
+            auto a = 0.5 * (unit_direction.y() + 1.0);
+            return (1.0 - a) * Vector3f(1.0, 1.0, 1.0) + a * Vector3f(0.5, 0.7, 1.0);
+        }
+
+        ray scattered;
+        Vector3f attenuation;
+        if (rec.mat->scatter(r, rec, attenuation, scattered))
+            return rec.mat->mix_color(attenuation, ray_color(scattered, depth - 1, bvh_tree));
+        return Vector3f(0, 0, 0);
+    }
+
+    Vector3f ray_color_without_bvh(const ray &r, int depth, const hittable_list &world) const
     {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if (depth <= 0)
@@ -189,7 +213,7 @@ private:
         ray scattered;
         Vector3f attenuation;
         if (rec.mat->scatter(r, rec, attenuation, scattered))
-            return rec.mat->mix_color(attenuation, ray_color(scattered, depth - 1, world));
+            return rec.mat->mix_color(attenuation, ray_color_without_bvh(scattered, depth - 1, world));
         return Vector3f(0, 0, 0);
     }
 };

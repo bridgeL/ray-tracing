@@ -2,8 +2,9 @@
 #define HITTABLE_LIST_H
 
 #include "hittable.h"
+#include "bvh.h"
 
-class hittable_list : public hittable
+class hittable_list
 {
 public:
     std::vector<shared_ptr<hittable>> objects;
@@ -18,7 +19,13 @@ public:
         objects.push_back(object);
     }
 
-    bool hit(const ray &r, interval ray_t, hit_record &rec) const override
+    shared_ptr<BVHNode> create_bvh_tree() const
+    {
+        return std::make_shared<BVHNode>(objects, 0, objects.size());
+    }
+
+    // 保留此方法，便于对比性能差距
+    bool hit(const ray &r, interval ray_t, hit_record &rec) const
     {
         hit_record temp_rec;
         bool hit_anything = false;

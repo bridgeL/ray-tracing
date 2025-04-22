@@ -18,6 +18,8 @@ public:
 
         // Compute normal once for the triangle
         normal = (p1 - p0).cross(p2 - p0).normalized();
+        
+        box = create_bbox();
     }
 
     triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
@@ -28,6 +30,8 @@ public:
         vertices[0] = p0;
         vertices[1] = p1;
         vertices[2] = p2;
+        
+        box = create_bbox();
     }
 
     triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
@@ -45,6 +49,8 @@ public:
 
         // Compute normal once for the triangle
         normal = (p1 - p0).cross(p2 - p0).normalized();
+
+        box = create_bbox();
     }
 
     triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
@@ -60,6 +66,21 @@ public:
         texture_coords[0] = t0;
         texture_coords[1] = t1;
         texture_coords[2] = t2;
+
+        box = create_bbox();
+    }
+
+    bbox create_bbox()
+    {
+        return bbox(
+            Vector3f(
+                std::min({vertices[0][0], vertices[1][0], vertices[2][0]}),
+                std::min({vertices[0][1], vertices[1][1], vertices[2][1]}),
+                std::min({vertices[0][2], vertices[1][2], vertices[2][2]})),
+            Vector3f(
+                std::max({vertices[0][0], vertices[1][0], vertices[2][0]}),
+                std::max({vertices[0][1], vertices[1][1], vertices[2][1]}),
+                std::max({vertices[0][2], vertices[1][2], vertices[2][2]})));
     }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
