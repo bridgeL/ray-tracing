@@ -22,7 +22,8 @@ public:
     {
         initialize();
 
-        std::cout << "image size: " << image_width << ' ' << image_height << "\nPush any key to cancel\n";
+        std::cout << "image size: " << image_width << ' ' << image_height << std::endl;
+        std::cout << "object count: " << world.objects.size() << std::endl;
 
         std::shared_ptr<BVHNode> bvh_tree = world.create_bvh_tree();
 

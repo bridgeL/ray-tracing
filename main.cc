@@ -12,6 +12,14 @@ int main()
     auto ground_material = make_shared<lambertian>(Vector3f(0.7, 0.7, 0.7));
     world.add(make_shared<sphere>(Vector3f(0, -1000, 0), 1000, ground_material));
 
+    auto loader = make_shared<ObjLoader>();
+    loader->read_obj("../model/desktop_table.obj", "../model/texture.png");
+
+    for (size_t i = 0; i < loader->triangles.size(); i++)
+    {
+        world.add(loader->triangles[i]);
+    }
+
     {
         auto m1 = make_shared<metal>(Vector3f(0.7, 0.6, 0.5), 0.0);
         world.add(make_shared<sphere>(Vector3f(-2, 2, 1), 1, m1));
@@ -30,36 +38,6 @@ int main()
             Vector2f(0, 1),
             Vector2f(1, 1),
             m2));
-    }
-
-    for (int a = -11; a < 11; a++)
-    {
-        for (int b = -11; b < 11; b++)
-        {
-            auto choose_mat = random_double();
-            Vector3f center(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
-
-            if ((center - Vector3f(4, 0.2, 0)).norm() > 0.9)
-            {
-                shared_ptr<material> sphere_material;
-
-                if (choose_mat < 0.8)
-                {
-                    // diffuse
-                    auto albedo = Vector3f(random_double(), random_double(), random_double());
-                    sphere_material = make_shared<lambertian>(albedo);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
-                }
-                else
-                {
-                    // metal
-                    auto albedo = Vector3f(random_double(0.5, 1), random_double(0.5, 1), random_double(0.5, 1));
-                    auto fuzz = random_double(0, 0.5);
-                    sphere_material = make_shared<metal>(albedo, fuzz);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
-                }
-            }
-        }
     }
 
     camera cam;
