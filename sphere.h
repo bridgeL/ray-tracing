@@ -7,7 +7,9 @@ class sphere : public hittable
 {
 public:
     sphere(const Vector3f &center, float radius, shared_ptr<material> mat)
-        : center(center), radius(std::fmax(0, radius)), mat(mat) {}
+        : center(center), radius(std::fmax(0, radius)), mat(mat) {
+            box = bbox(center.array() - radius, center.array() + radius);
+        }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
