@@ -88,17 +88,17 @@ class ObjLoader{
                     }
                     // create triangle
                     auto mat = std::make_shared<textured_lambertian>(texture_data);
-                
+                    
                     auto tri = make_shared<triangle>(
-                        this->vertices[face->vert_pos[0]],
-                        this->vertices[face->vert_pos[1]],
-                        this->vertices[face->vert_pos[2]],   // vertices
-                        this->tex_coords[face->tex_coords[0]],
-                        this->tex_coords[face->tex_coords[1]],
-                        this->tex_coords[face->tex_coords[2]],
+                        this->vertices[face->vert_pos[0] - 1],
+                        this->vertices[face->vert_pos[1] - 1],
+                        this->vertices[face->vert_pos[2] - 1],   // vertices
+                        this->tex_coords[face->tex_coords[0] - 1],
+                        this->tex_coords[face->tex_coords[1] - 1],
+                        this->tex_coords[face->tex_coords[2] - 1],
                         mat
                     );
-                    // this->faces.push_back(face);
+                    // // this->faces.push_back(face);
                     this->triangles.push_back(tri);
                 }
             }
