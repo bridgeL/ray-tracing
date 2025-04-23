@@ -14,7 +14,7 @@ int main()
 
     {
         auto loader = make_shared<ObjLoader>();
-        loader->read_obj("../model/cow.obj", "../model/cow.png");
+        loader->read_obj("../model/desktop_table.obj", "../model/r.png");
 
         for (size_t i = 0; i < loader->triangles.size(); i++)
             world.add(loader->triangles[i]);
@@ -26,9 +26,8 @@ int main()
     }
 
     {
-        auto image_data = cv::imread("../model/texture.png");
+        auto image_data = cv::imread("../model/r.png");
         cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
-        image_data = image_data / 255;
         auto m2 = make_shared<textured_lambertian>(image_data);
         world.add(make_shared<triangle>(
             Vector3f(-3, 1, 0),

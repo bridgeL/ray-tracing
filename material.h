@@ -40,7 +40,7 @@ public:
     Vector3f mix_color(const Vector3f &origin, const Vector3f &new_color)
         const override
     {
-        return origin.cwiseProduct(new_color) ;
+        return origin.cwiseProduct(new_color);
     }
 
 private:
@@ -74,13 +74,14 @@ public:
         auto u_img = u * image_data.cols;       // width
         auto v_img = (1 - v) * image_data.rows; // height
         auto color = image_data.at<cv::Vec3b>(v_img, u_img);
-        return Vector3f(color[0], color[1], color[2]);
+        return Vector3f(color[0], color[1], color[2]) / 255;
     }
 
     Vector3f mix_color(const Vector3f &origin, const Vector3f &new_color)
         const override
     {
-        return origin.cwiseProduct(new_color) ;
+        return origin.cwiseProduct(new_color);
+        // return origin * 0.5 + new_color * 0.5;
     }
 
 private:

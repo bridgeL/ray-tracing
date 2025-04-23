@@ -18,7 +18,7 @@ public:
 
         // Compute normal once for the triangle
         normal = (p1 - p0).cross(p2 - p0).normalized();
-        
+
         box = create_bbox();
     }
 
@@ -30,7 +30,7 @@ public:
         vertices[0] = p0;
         vertices[1] = p1;
         vertices[2] = p2;
-        
+
         box = create_bbox();
     }
 
@@ -119,28 +119,37 @@ public:
 
         return true;
     }
-
     Vector3f computeBarycentric(const Vector3f &p) const
     {
         Vector3f p1 = vertices[0];
         Vector3f p2 = vertices[1];
         Vector3f p3 = vertices[2];
-
-        Vector3f v1 = p2 - p1;
-        Vector3f v2 = p3 - p1;
-        Vector3f vp = p - p1;
-
-        // 计算法向量 n = v1 × v2（用于统一分母）
-        Vector3f n = v1.cross(v2);
-        float denom = n.squaredNorm(); // 分母 = (v1 × v2) · n = |v1 × v2|^2
-
-        // 计算 u 和 v
-        float u = vp.cross(v2).dot(n) / denom;
-        float v = v1.cross(vp).dot(n) / denom;
-        float w = 1 - u - v;
-
+    
+        // 计算向量
+        Vector3f v0 = p2 - p1;
+        Vector3f v1 = p3 - p1;
+        Vector3f v2 = p  - p1;
+    
+        // 计算叉积面积
+        float d00 = v0.dot(v0);
+        float d01 = v0.dot(v1);
+        float d11 = v1.dot(v1);
+        float d20 = v2.dot(v0);
+        float d21 = v2.dot(v1);
+    
+        float denom = d00 * d11 - d01 * d01;
+    
+        // 防止除零
+        if (denom == 0.0f)
+            return Vector3f(-1.0f, -1.0f, -1.0f);  // 或者根据你的需求返回特殊值
+    
+        float v = (d11 * d20 - d01 * d21) / denom;
+        float w = (d00 * d21 - d01 * d20) / denom;
+        float u = 1.0f - v - w;
+    
         return Vector3f(u, v, w);
     }
+    
 
     bool insideTriangle(const Vector3f &p) const
     {
