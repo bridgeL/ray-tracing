@@ -12,12 +12,12 @@ int main()
     auto ground_material = make_shared<lambertian>(Vector3f(0.7, 0.7, 0.7));
     world.add(make_shared<sphere>(Vector3f(0, -1000, 0), 1000, ground_material));
 
-    auto loader = make_shared<ObjLoader>();
-    loader->read_obj("../model/desktop_table.obj", "../model/texture.png");
-
-    for (size_t i = 0; i < loader->triangles.size(); i++)
     {
-        world.add(loader->triangles[i]);
+        auto loader = make_shared<ObjLoader>();
+        loader->read_obj("../model/cow.obj", "../model/cow.png");
+
+        for (size_t i = 0; i < loader->triangles.size(); i++)
+            world.add(loader->triangles[i]);
     }
 
     {
