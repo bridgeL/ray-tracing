@@ -14,7 +14,8 @@ int main()
 
     {
         auto loader = make_shared<ObjLoader>();
-        loader->read_obj("../model/desktop_table.obj", "../model/r.png");
+        loader->read_obj("../model/cow.obj", "../model/cow.png");
+        loader->translate(0, 100, 0);
 
         for (size_t i = 0; i < loader->triangles.size(); i++)
             world.add(loader->triangles[i]);

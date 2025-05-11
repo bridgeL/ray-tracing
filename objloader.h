@@ -143,6 +143,81 @@ public:
         }
         return true;
     }
+
+    // ######## Transformation Functions ########
+    inline void translate(float x, float y, float z){
+        // calculate the translation matrix and apply it to all triangles
+        Eigen::Matrix4f translation = get_translation(Vector3f(x, y, z));
+        std::cout << "First vertex: (" 
+                  << vertices[0][0] << ", " 
+                  << vertices[0][1] << ", " 
+                  << vertices[0][2] << ")" << std::endl;
+        for(auto& v: vertices){
+            Vector4f result = translation * Vector4f(v[0], v[1], v[2], 1.0f);
+            v = result.head<3>();
+        }
+        std::cout << "First vertex: (" 
+                  << vertices[0][0] << ", " 
+                  << vertices[0][1] << ", " 
+                  << vertices[0][2] << ")" << std::endl;
+    }
+
+    inline void rotate(float angle, float x, float y, float z){
+        // calculate the rotation matrix and apply it to all triangles
+        Eigen::Matrix4f rotation = get_rotation(angle, Vector3f(x, y, z));
+        for(auto& v: vertices){
+            Vector4f result = rotation * Vector4f(v[0], v[1], v[2], 1.0f);
+            v = result.head<3>();
+        }
+    }
+
+    inline void scale(float x, float y, float z){
+        // calculate the scaling matrix and apply it to all triangles
+        Eigen::Matrix4f scaling = Eigen::Matrix4f::Identity();
+        scaling(0, 0) = x;
+        scaling(1, 1) = y;
+        scaling(2, 2) = z;
+
+        for(auto& v: vertices){
+            Vector4f result = scaling * Vector4f(v[0], v[1], v[2], 1.0f);
+            v = result.head<3>();
+        }
+    }
+
+private:
+    // these helper functions are modified from HW1 codes
+    Eigen::Matrix4f get_translation(const Eigen::Vector3f &translation) {
+        // Calculate a transformation matrix of given translation vector.
+        Eigen::Matrix4f trans = Eigen::Matrix4f::Identity();
+        trans.block<3,1>(0,3) = translation.transpose(); // put translation value into the last column
+
+        return trans;
+    }
+
+    Eigen::Matrix4f get_rotation(float rotation_angle, const Eigen::Vector3f &axis) {
+        Eigen::Matrix4f rotation_matrix = Eigen::Matrix4f::Identity();
+
+        Eigen::Vector3f norm_vector = axis.normalized();  // normalize the axises
+        float nx = norm_vector.x();
+        float ny = norm_vector.y();
+        float nz = norm_vector.z(); // x, y, z value of the normalized axis
+
+        float rad = rotation_angle * 3.1415 / 180.0f;    // convert the angle from degree to radian
+        float cos = std::cos(rad);   // cos(theta)
+        float sin = std::sin(rad);   // sin(theta)
+        float omc = 1.0f - cos;  // 1 - cos(theta)
+
+        // put rotation parameters into the matrix
+        Eigen::Matrix3f rotation;
+        rotation << cos + nx*nx*omc,        nx*ny*omc - nz*sin,     nx*nz*omc + ny*sin,
+                    ny*nx*omc + nz*sin,     cos + ny*ny*omc,        ny*nz*omc - nx*sin,
+                    nz*nx*omc - ny*sin,     nz*ny*omc + nx*sin,     cos + nz*nz*omc;
+
+        // convert the rotation matrix into homogeneous matrix and return
+        rotation_matrix.block<3,3>(0,0) = rotation; // replace the upper left 3*3 block
+
+        return rotation_matrix;
+    }
 };
 
 #endif
