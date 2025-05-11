@@ -6,10 +6,10 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <vector>
+#include <algorithm>
 #include <opencv2/opencv.hpp>
-#include <Eigen/Eigen>
 
-using namespace Eigen;
 
 // C++ Std Usings
 
@@ -40,46 +40,17 @@ inline double random_double(double min, double max)
     return min + (max - min) * random_double();
 }
 
-// 生成一个随机的单位向量（均匀分布在单位球面上）
-inline Vector3f random_unit_vector()
+inline double linear_to_gamma(double linear_component)
 {
-    while (true)
-    {
-        // 在 [-1, 1) 范围内随机生成
-        Vector3f p(random_double(-1, 1), random_double(-1, 1), random_double(-1, 1));
+    if (linear_component > 0)
+        return std::sqrt(linear_component);
 
-        // 计算长度的平方
-        float lensq = p.squaredNorm();
-
-        // 避免接近零的情况
-        // 避免8个角落方向的概率高于平均值
-        if (lensq > 1e-16f && lensq <= 1.0f)
-            return p.normalized(); // 归一化并返回
-    }
-}
-
-inline bool near_zero_vector(Vector3f v)
-{
-    return v.squaredNorm() < 1e-16f;
-}
-
-inline Vector3f reflect(const Vector3f &v, const Vector3f &n)
-{
-    return v - 2.0f * v.dot(n) * n;
-}
-
-inline Vector3f interpolate(const Vector3f &weight, const Vector3f &p1, const Vector3f &p2, const Vector3f &p3)
-{
-    return weight[0] * p1 + weight[1] * p2 + weight[2] * p3;
-}
-
-inline Vector2f interpolate(const Vector3f &weight, const Vector2f &p1, const Vector2f &p2, const Vector2f &p3)
-{
-    return weight[0] * p1 + weight[1] * p2 + weight[2] * p3;
+    return 0;
 }
 
 // Common Headers
 
+#include "vec3.h"
 #include "interval.h"
 #include "ray.h"
 #include "bbox.h"

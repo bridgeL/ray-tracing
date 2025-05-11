@@ -1,55 +1,39 @@
 #ifndef BBOX_H
 #define BBOX_H
 
+#include "interval.h"
+
 class bbox
 {
 public:
-    Vector3f min;
-    Vector3f max;
+    interval x;
+    interval y;
+    interval z;
 
-    // Default bbox is empty
-    bbox() : min(Vector3f(infinity, infinity, infinity)), max(Vector3f(-infinity, -infinity, -infinity)) {}
+    bbox() {}
+    bbox(const interval &x, const interval &y, const interval &z) : x(x), y(y), z(z) {}
 
-    bbox(Vector3f min, Vector3f max) : min(min), max(max) {}
-
-    Vector3f center() const
-    {
-        return 0.5f * (min + max);
-    }
-
-    void expand_box(const bbox &b)
-    {
-        for (size_t i = 0; i < 3; i++)
-        {
-            if (b.max[i] > max[i])
-                max[i] = b.max[i];
-            if (b.min[i] < min[i])
-                min[i] = b.min[i];
-        }
-    }
-
-    float surface_area() const
-    {
-        Vector3f d = max - min;
-        return 2.0f * (d.x() * d.y() + d.x() * d.z() + d.y() * d.z());
-    }
+    // merge two bounding boxes
+    bbox(const bbox &a, const bbox &b) : x(a.x, b.x), y(a.y, b.y), z(a.z, b.z) {}
 
     int longest_axis() const
     {
-        Vector3f d = max - min;
-        if (d.x() > d.y() && d.x() > d.z())
+        if (x.size() > y.size() && x.size() > z.size())
             return 0;
-        return (d.y() > d.z()) ? 1 : 2;
+        if (y.size() > z.size())
+            return 1;
+        return 2;
     }
 
     // 新增：射线相交检测
     bool hit(const ray &r, interval ray_t) const
     {
+        interval m[3] = {x, y, z};
         for (int i = 0; i < 3; i++)
         {
-            float invD = 1.0f / r.direction()[i];
-            float t0 = (min[i] - r.origin()[i]) * invD;
-            float t1 = (max[i] - r.origin()[i]) * invD;
+            double invD = 1.0f / r.direction()[i];
+            double t0 = (m[i].min - r.origin()[i]) * invD;
+            double t1 = (m[i].max - r.origin()[i]) * invD;
             if (invD < 0.0f)
                 std::swap(t0, t1);
             ray_t.min = t0 > ray_t.min ? t0 : ray_t.min;
@@ -63,7 +47,7 @@ public:
     static const bbox empty, universe;
 };
 
-const bbox bbox::empty = bbox(Vector3f(infinity, infinity, infinity), Vector3f(-infinity, -infinity, -infinity));
-const bbox bbox::universe = bbox(Vector3f(-infinity, -infinity, -infinity), Vector3f(infinity, infinity, infinity));
+const bbox bbox::empty = bbox(interval::empty, interval::empty, interval::empty);
+const bbox bbox::universe = bbox(interval::universe, interval::universe, interval::universe);
 
 #endif

@@ -4,29 +4,34 @@
 #include "hittable.h"
 #include "bvh.h"
 
-class hittable_list
+class hittable_list : public hittable
 {
 public:
     std::vector<shared_ptr<hittable>> objects;
+    shared_ptr<BVHNode> bvh_tree;
+    bbox b;
 
-    hittable_list() {}
-    hittable_list(shared_ptr<hittable> object) { add(object); }
+    hittable_list() : b(bbox::empty) {}
 
     void clear() { objects.clear(); }
 
     void add(shared_ptr<hittable> object)
     {
         objects.push_back(object);
+        b = bbox(b, object->get_bbox());
     }
 
-    shared_ptr<BVHNode> create_bvh_tree() const
+    void create_bvh_tree(int max_leaf_size = 5)
     {
-        return std::make_shared<BVHNode>(objects, 0, objects.size());
+        bvh_tree = make_shared<BVHNode>(objects, 0, objects.size(), max_leaf_size);
     }
 
-    // 保留此方法，便于对比性能差距
-    bool hit(const ray &r, interval ray_t, hit_record &rec) const
+    bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
+        if (bvh_tree)
+            return bvh_tree->hit(r, ray_t, rec);
+
+        // 保留此方法，以对比性能
         hit_record temp_rec;
         bool hit_anything = false;
         auto closest_so_far = ray_t.max;
@@ -42,6 +47,11 @@ public:
         }
 
         return hit_anything;
+    }
+
+    bbox get_bbox() const override
+    {
+        return b;
     }
 };
 

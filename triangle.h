@@ -5,57 +5,26 @@
 #include "ray.h"
 #include "interval.h"
 
+class vertex
+{
+public:
+    vec3 pos;
+    double u;
+    double v;
+    vec3 normal;
+
+    vertex() {}
+    vertex(const vec3 &pos, double u, double v, const vec3 &normal) : pos(pos), u(u), v(v), normal(normal) {}
+    vertex(const vec3 &pos) : pos(pos), u(0), v(0), normal(vec3(0, 0, 0)) {}
+};
+
 class triangle : public hittable
 {
 public:
-    triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
-             shared_ptr<material> mat)
-        : mat(mat)
-    {
-        vertices[0] = p0;
-        vertices[1] = p1;
-        vertices[2] = p2;
-
-        // Compute normal once for the triangle
-        normal = (p1 - p0).cross(p2 - p0).normalized();
-        
-        box = create_bbox();
-    }
-
-    triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
-             const Vector3f &normal,
-             shared_ptr<material> mat)
-        : mat(mat), normal(normal)
-    {
-        vertices[0] = p0;
-        vertices[1] = p1;
-        vertices[2] = p2;
-        
-        box = create_bbox();
-    }
-
-    triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
-             const Vector2f &t0, const Vector2f &t1, const Vector2f &t2,
-             shared_ptr<material> mat)
-        : mat(mat)
-    {
-        vertices[0] = p0;
-        vertices[1] = p1;
-        vertices[2] = p2;
-
-        texture_coords[0] = t0;
-        texture_coords[1] = t1;
-        texture_coords[2] = t2;
-
-        // Compute normal once for the triangle
-        normal = (p1 - p0).cross(p2 - p0).normalized();
-
-        box = create_bbox();
-    }
-
-    triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
-             const Vector2f &t0, const Vector2f &t1, const Vector2f &t2,
-             const Vector3f &normal,
+    triangle(const vertex &p0,
+             const vertex &p1,
+             const vertex &p2,
+             const vec3 &normal,
              shared_ptr<material> mat)
         : mat(mat), normal(normal)
     {
@@ -63,44 +32,36 @@ public:
         vertices[1] = p1;
         vertices[2] = p2;
 
-        texture_coords[0] = t0;
-        texture_coords[1] = t1;
-        texture_coords[2] = t2;
+        // 提取坐标到数组
+        double xs[3] = {p0.pos.x(), p1.pos.x(), p2.pos.x()};
+        double ys[3] = {p0.pos.y(), p1.pos.y(), p2.pos.y()};
+        double zs[3] = {p0.pos.z(), p1.pos.z(), p2.pos.z()};
 
-        box = create_bbox();
-    }
-
-    bbox create_bbox()
-    {
-        return bbox(
-            Vector3f(
-                std::min({vertices[0][0], vertices[1][0], vertices[2][0]}),
-                std::min({vertices[0][1], vertices[1][1], vertices[2][1]}),
-                std::min({vertices[0][2], vertices[1][2], vertices[2][2]})),
-            Vector3f(
-                std::max({vertices[0][0], vertices[1][0], vertices[2][0]}),
-                std::max({vertices[0][1], vertices[1][1], vertices[2][1]}),
-                std::max({vertices[0][2], vertices[1][2], vertices[2][2]})));
+        // 使用初始化列表计算min/max
+        b = bbox(
+            interval(std::min({xs[0], xs[1], xs[2]}), std::max({xs[0], xs[1], xs[2]})),
+            interval(std::min({ys[0], ys[1], ys[2]}), std::max({ys[0], ys[1], ys[2]})),
+            interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})));
     }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
-        Vector3f p1 = vertices[0];
-        Vector3f p2 = vertices[1];
-        Vector3f p3 = vertices[2];
+        vec3 p1 = vertices[0].pos;
+        vec3 p2 = vertices[1].pos;
+        vec3 p3 = vertices[2].pos;
 
-        Vector3f v1 = p1 - p2;
-        Vector3f v2 = p1 - p3;
-        float d = normal.dot(r.direction());
+        vec3 v1 = p1 - p2;
+        vec3 v2 = p1 - p3;
+        double d = normal.dot(r.direction());
         if (abs(d) < 1e-16)
             return false;
 
-        float t = normal.dot(p1 - r.origin()) / d;
+        double t = normal.dot(p1 - r.origin()) / d;
         if (t < 0)
             return false;
 
         // 获取与平面的交点
-        Vector3f p = r.at(t);
+        vec3 p = r.at(t);
 
         // 获取与交点的距离
         if (!ray_t.contains(t))
@@ -115,58 +76,64 @@ public:
         rec.p = p;
         rec.normal = normal;
         rec.mat = mat;
-        rec.texture_coord = interpolate(computeBarycentric(p), texture_coords[0], texture_coords[1], texture_coords[2]);
+        rec.u = interpolate(computeBarycentric(p), vertices[0].u, vertices[1].u, vertices[2].u);
+        rec.v = interpolate(computeBarycentric(p), vertices[0].v, vertices[1].v, vertices[2].v);
 
         return true;
     }
 
-    Vector3f computeBarycentric(const Vector3f &p) const
+    vec3 computeBarycentric(const vec3 &p) const
     {
-        Vector3f p1 = vertices[0];
-        Vector3f p2 = vertices[1];
-        Vector3f p3 = vertices[2];
+        vec3 p1 = vertices[0].pos;
+        vec3 p2 = vertices[1].pos;
+        vec3 p3 = vertices[2].pos;
 
-        Vector3f v1 = p2 - p1;
-        Vector3f v2 = p3 - p1;
-        Vector3f vp = p - p1;
+        vec3 v1 = p2 - p1;
+        vec3 v2 = p3 - p1;
+        vec3 vp = p - p1;
 
         // 计算法向量 n = v1 × v2（用于统一分母）
-        Vector3f n = v1.cross(v2);
-        float denom = n.squaredNorm(); // 分母 = (v1 × v2) · n = |v1 × v2|^2
+        vec3 n = v1.cross(v2);
+        double denom = n.length_squared(); // 分母 = (v1 × v2) · n = |v1 × v2|^2
 
         // 计算 u 和 v
-        float u = vp.cross(v2).dot(n) / denom;
-        float v = v1.cross(vp).dot(n) / denom;
-        float w = 1 - u - v;
+        double u = vp.cross(v2).dot(n) / denom;
+        double v = v1.cross(vp).dot(n) / denom;
+        double w = 1 - u - v;
 
-        return Vector3f(u, v, w);
+        return vec3(u, v, w);
     }
 
-    bool insideTriangle(const Vector3f &p) const
+    bool insideTriangle(const vec3 &p) const
     {
         // 计算点p到三条边的叉积符号
-        Vector3f p1 = vertices[0];
-        Vector3f p2 = vertices[1];
-        Vector3f p3 = vertices[2];
+        vec3 p1 = vertices[0].pos;
+        vec3 p2 = vertices[1].pos;
+        vec3 p3 = vertices[2].pos;
 
-        Vector3f c1 = (p - p1).cross(p2 - p1);
-        Vector3f c2 = (p - p2).cross(p3 - p2);
-        Vector3f c3 = (p - p3).cross(p1 - p3);
+        vec3 c1 = (p - p1).cross(p2 - p1);
+        vec3 c2 = (p - p2).cross(p3 - p2);
+        vec3 c3 = (p - p3).cross(p1 - p3);
 
         // 检查符号一致性（与法向量点积）
-        float dot1 = c1.dot(normal);
-        float dot2 = c2.dot(normal);
-        float dot3 = c3.dot(normal);
+        double dot1 = c1.dot(normal);
+        double dot2 = c2.dot(normal);
+        double dot3 = c3.dot(normal);
 
         // 如果所有点积同号（包括等于0的情况，表示在边上）
         return (dot1 >= 0 && dot2 >= 0 && dot3 >= 0) || (dot1 <= 0 && dot2 <= 0 && dot3 <= 0);
     }
 
+    bbox get_bbox() const override
+    {
+        return b;
+    }
+
 private:
-    Vector3f vertices[3];
-    Vector2f texture_coords[3];
-    Vector3f normal;
+    vertex vertices[3];
+    vec3 normal;
     shared_ptr<material> mat;
+    bbox b;
 };
 
 #endif
