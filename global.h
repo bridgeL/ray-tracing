@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <opencv2/opencv.hpp>
 
-
 // C++ Std Usings
 
 using std::make_shared;
@@ -46,6 +45,22 @@ inline double linear_to_gamma(double linear_component)
         return std::sqrt(linear_component);
 
     return 0;
+}
+
+cv::Mat read_image(const std::string &filepath)
+{
+    auto bgr_image = cv::imread(filepath); // 默认读取为BGR格式
+    cv::Mat rgb_image;
+    cv::cvtColor(bgr_image, rgb_image, cv::COLOR_BGR2RGB);
+    return rgb_image;
+}
+
+double normalizeUV(double uv)
+{
+    double wrapped = std::fmod(uv, 1.0);
+    if (wrapped < 0)
+        wrapped += 1.0; // 处理负值
+    return wrapped;
 }
 
 // Common Headers

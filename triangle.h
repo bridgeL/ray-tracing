@@ -14,13 +14,29 @@ public:
     vec3 normal;
 
     vertex() {}
-    vertex(const vec3 &pos) : pos(pos), u(0), v(0), normal(vec3(0, 0, 0)) {}
+    vertex(const vec3 &pos) : pos(pos), u(-1), v(-1), normal(vec3(0, 0, 0)) {}
     vertex(const vec3 &pos, double u, double v, const vec3 &normal) : pos(pos), u(u), v(v), normal(normal) {}
+
+    std::string toString() const
+    {
+        std::ostringstream oss;
+        oss << "Vertex {\n"
+            << "  pos: (" << pos.x() << ", " << pos.y() << ", " << pos.z() << ")\n"
+            << "  uv: (" << u << ", " << v << ")\n"
+            << "  normal: (" << normal.x() << ", " << normal.y() << ", " << normal.z() << ")\n"
+            << "}";
+        return oss.str();
+    }
 };
 
 class triangle : public hittable
 {
 public:
+    vertex vertices[3];
+    vec3 normal;
+    shared_ptr<material> mat;
+    bbox b;
+
     triangle(
         const vertex &p0,
         const vertex &p1,
@@ -28,17 +44,21 @@ public:
         const vec3 &normal,
         shared_ptr<material> mat) : mat(mat),
                                     normal(normal),
-                                    vertices({p0, p1, p2}),
-                                    b(calculateBBox(p0, p1, p2)) {}
+                                    vertices({p0, p1, p2})
+    {
+        calculateBBox();
+    }
 
     triangle(
         const vertex &p0,
         const vertex &p1,
         const vertex &p2,
         shared_ptr<material> mat) : mat(mat),
-                                    normal(calculateNormal(p0, p1, p2)),
-                                    vertices({p0, p1, p2}),
-                                    b(calculateBBox(p0, p1, p2)) {}
+                                    vertices({p0, p1, p2})
+    {
+        calculateBBox();
+        calculateNormal();
+    }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
@@ -76,24 +96,79 @@ public:
         return true;
     }
 
+    bbox get_bbox() const override
+    {
+        return b;
+    }
+
+    std::string toString() const
+    {
+        std::ostringstream oss;
+        oss << "Triangle {\n";
+        for (int i = 0; i < 3; ++i)
+        {
+            oss << "  v" << i << ": " << vertices[i].toString() << "\n";
+        }
+        oss << "  face_normal: (" << normal.x() << ", " << normal.y() << ", " << normal.z() << ")\n"
+            << "}";
+        return oss.str();
+    }
+
+    // 包围盒计算
+    void calculateBBox()
+    {
+        const vertex &p0 = vertices[0];
+        const vertex &p1 = vertices[1];
+        const vertex &p2 = vertices[2];
+
+        double xs[3] = {p0.pos.x(), p1.pos.x(), p2.pos.x()};
+        double ys[3] = {p0.pos.y(), p1.pos.y(), p2.pos.y()};
+        double zs[3] = {p0.pos.z(), p1.pos.z(), p2.pos.z()};
+
+        b = bbox(
+            interval(std::min({xs[0], xs[1], xs[2]}), std::max({xs[0], xs[1], xs[2]})),
+            interval(std::min({ys[0], ys[1], ys[2]}), std::max({ys[0], ys[1], ys[2]})),
+            interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})));
+    }
+
+    // 法向量计算
+    void calculateNormal()
+    {
+        const vertex &p0 = vertices[0];
+        const vertex &p1 = vertices[1];
+        const vertex &p2 = vertices[2];
+
+        normal = (p1.pos - p0.pos).cross(p2.pos - p0.pos).normalized();
+    }
+
+private:
     vec3 computeBarycentric(const vec3 &p) const
     {
         vec3 p1 = vertices[0].pos;
         vec3 p2 = vertices[1].pos;
         vec3 p3 = vertices[2].pos;
 
-        vec3 v1 = p2 - p1;
-        vec3 v2 = p3 - p1;
-        vec3 vp = p - p1;
+        // 计算向量
+        vec3 v0 = p2 - p1;
+        vec3 v1 = p3 - p1;
+        vec3 v2 = p - p1;
 
-        // 计算法向量 n = v1 × v2（用于统一分母）
-        vec3 n = v1.cross(v2);
-        double denom = n.length_squared(); // 分母 = (v1 × v2) · n = |v1 × v2|^2
+        // 计算叉积面积
+        float d00 = v0.dot(v0);
+        float d01 = v0.dot(v1);
+        float d11 = v1.dot(v1);
+        float d20 = v2.dot(v0);
+        float d21 = v2.dot(v1);
 
-        // 计算 u 和 v
-        double u = vp.cross(v2).dot(n) / denom;
-        double v = v1.cross(vp).dot(n) / denom;
-        double w = 1 - u - v;
+        float denom = d00 * d11 - d01 * d01;
+
+        // 防止除零
+        if (denom == 0.0f)
+            return vec3(-1.0f, -1.0f, -1.0f); // 或者根据你的需求返回特殊值
+
+        float v = (d11 * d20 - d01 * d21) / denom;
+        float w = (d00 * d21 - d01 * d20) / denom;
+        float u = 1.0f - v - w;
 
         return vec3(u, v, w);
     }
@@ -116,36 +191,6 @@ public:
 
         // 如果所有点积同号（包括等于0的情况，表示在边上）
         return (dot1 >= 0 && dot2 >= 0 && dot3 >= 0) || (dot1 <= 0 && dot2 <= 0 && dot3 <= 0);
-    }
-
-    bbox get_bbox() const override
-    {
-        return b;
-    }
-
-private:
-    vertex vertices[3];
-    vec3 normal;
-    shared_ptr<material> mat;
-    bbox b;
-
-    // 提取包围盒计算逻辑
-    bbox calculateBBox(const vertex &p0, const vertex &p1, const vertex &p2)
-    {
-        double xs[3] = {p0.pos.x(), p1.pos.x(), p2.pos.x()};
-        double ys[3] = {p0.pos.y(), p1.pos.y(), p2.pos.y()};
-        double zs[3] = {p0.pos.z(), p1.pos.z(), p2.pos.z()};
-
-        return bbox(
-            interval(std::min({xs[0], xs[1], xs[2]}), std::max({xs[0], xs[1], xs[2]})),
-            interval(std::min({ys[0], ys[1], ys[2]}), std::max({ys[0], ys[1], ys[2]})),
-            interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})));
-    }
-
-    // 提取法向量计算逻辑
-    vec3 calculateNormal(const vertex &p0, const vertex &p1, const vertex &p2)
-    {
-        return (p1.pos - p0.pos).cross(p2.pos - p0.pos).normalized();
     }
 };
 

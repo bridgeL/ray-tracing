@@ -60,6 +60,9 @@ public:
 
     vec3 get_color(double u, double v) const
     {
+        if (u < 0 || v < 0)
+            return vec3(0, 0, 0);
+
         auto u_img = u * image_data.cols;       // width
         auto v_img = (1 - v) * image_data.rows; // height
         auto color = image_data.at<cv::Vec3b>(v_img, u_img) / 255.0;

@@ -25,17 +25,23 @@ public:
 
     void render(const hittable_list &world, bool display)
     {
+        std::cout << "Objects number: " << world.objects.size() << std::endl;
+
         for (int j = 0; j < image_height; j++)
         {
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++)
             {
+                std::cout << "test: " << i << ", " << j << std::endl;
                 vec3 pixel_color(0, 0, 0);
                 for (int sample = 0; sample < samples_per_pixel; sample++)
                 {
+                    std::cout << "hi1" << std::endl;
                     ray r = get_ray(i, j);
+                    std::cout << "hi2" << std::endl;
                     pixel_color += ray_color(r, max_depth, world);
                 }
+                std::cout << "hi3" << std::endl;
                 screen.set_color(i, j, pixel_samples_scale * pixel_color);
             }
 
@@ -154,16 +160,17 @@ private:
         bool hit_anything = world.hit(r, interval(0.001, infinity), rec);
 
         if (!hit_anything)
-        {
-            vec3 unit_direction = r.direction().normalized();
-            auto a = 0.5 * (unit_direction.y() + 1.0);
-            return (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
-        }
+            return vec3(0.8, 0.8, 0.8);
 
         ray scattered;
         vec3 attenuation;
+        std::cout << "tt1" << std::endl;
         if (rec.mat->scatter(r, rec, attenuation, scattered))
+        {
+            std::cout << "tt2" << std::endl;
             return attenuation * ray_color(scattered, depth - 1, world);
+        }
+        std::cout << "tt3" << std::endl;
         return vec3(0, 0, 0);
     }
 };

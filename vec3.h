@@ -92,6 +92,13 @@ public:
         double len = length();
         return vec3(e[0] / len, e[1] / len, e[2] / len);
     }
+
+    std::string toString() const
+    {
+        std::ostringstream oss;
+        oss << "vec3(" << e[0] << ", " << e[1] << ", " << e[2] << ")";
+        return oss.str();
+    }
 };
 
 // Vector Utility Functions
