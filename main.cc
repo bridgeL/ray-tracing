@@ -15,7 +15,9 @@ int main()
     {
         auto loader = make_shared<ObjLoader>();
         loader->read_obj("../model/cow.obj", "../model/cow.png");
-        loader->translate(0, 100, 0);
+        loader->set_scale(1.5);
+        // loader->set_translate(0, 1, 0);
+        loader->apply_transformation();
 
         for (size_t i = 0; i < loader->triangles.size(); i++)
             world.add(loader->triangles[i]);
@@ -27,7 +29,7 @@ int main()
     }
 
     {
-        auto image_data = cv::imread("../model/r.png");
+        auto image_data = cv::imread("../model/cow.png");
         cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
         auto m2 = make_shared<textured_lambertian>(image_data);
         world.add(make_shared<triangle>(

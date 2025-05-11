@@ -171,7 +171,7 @@ public:
         return (dot1 >= 0 && dot2 >= 0 && dot3 >= 0) || (dot1 <= 0 && dot2 <= 0 && dot3 <= 0);
     }
 
-private:
+// private:
     Vector3f vertices[3];
     Vector2f texture_coords[3];
     Vector3f normal;

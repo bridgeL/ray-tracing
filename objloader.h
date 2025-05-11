@@ -32,7 +32,9 @@ public:
     std::vector<shared_ptr<Face>> faces; // triangles
     std::vector<shared_ptr<triangle>> triangles;
 
-    ObjLoader() {}
+    ObjLoader() {
+        transformation = Eigen::Matrix4f::Identity();   // init transformation matrix
+    }
     ~ObjLoader() {}
 
     // this function is defined for spliting three coordinates of a vertex in a face
@@ -145,46 +147,50 @@ public:
     }
 
     // ######## Transformation Functions ########
-    inline void translate(float x, float y, float z){
-        // calculate the translation matrix and apply it to all triangles
-        Eigen::Matrix4f translation = get_translation(Vector3f(x, y, z));
-        std::cout << "First vertex: (" 
-                  << vertices[0][0] << ", " 
-                  << vertices[0][1] << ", " 
-                  << vertices[0][2] << ")" << std::endl;
-        for(auto& v: vertices){
-            Vector4f result = translation * Vector4f(v[0], v[1], v[2], 1.0f);
-            v = result.head<3>();
-        }
-        std::cout << "First vertex: (" 
-                  << vertices[0][0] << ", " 
-                  << vertices[0][1] << ", " 
-                  << vertices[0][2] << ")" << std::endl;
+    inline void set_translate(float x, float y, float z){
+        // calculate the translation matrix and update transformation matrix
+        transformation = get_translation(Vector3f(x, y, z)) * transformation;
     }
 
-    inline void rotate(float angle, float x, float y, float z){
-        // calculate the rotation matrix and apply it to all triangles
-        Eigen::Matrix4f rotation = get_rotation(angle, Vector3f(x, y, z));
-        for(auto& v: vertices){
-            Vector4f result = rotation * Vector4f(v[0], v[1], v[2], 1.0f);
-            v = result.head<3>();
-        }
+    inline void set_rotate(float angle, float x, float y, float z){
+        // calculate the rotation matrix and and update transformation matrix
+        transformation = get_rotation(angle, Vector3f(x, y, z)) * transformation;
     }
 
-    inline void scale(float x, float y, float z){
-        // calculate the scaling matrix and apply it to all triangles
+    inline void set_scale(float x, float y, float z){
+        // calculate the scaling matrix and and update transformation matrix
         Eigen::Matrix4f scaling = Eigen::Matrix4f::Identity();
         scaling(0, 0) = x;
         scaling(1, 1) = y;
         scaling(2, 2) = z;
+        transformation = scaling * transformation;
+    }
 
-        for(auto& v: vertices){
-            Vector4f result = scaling * Vector4f(v[0], v[1], v[2], 1.0f);
-            v = result.head<3>();
+    inline void set_scale(float scale){
+        // calculate the scaling matrix and and update transformation matrix
+        Eigen::Matrix4f scaling = Eigen::Matrix4f::Identity();
+        scaling(0, 0) = scale;
+        scaling(1, 1) = scale;
+        scaling(2, 2) = scale;
+        transformation = scaling * transformation;
+    }
+
+    inline void apply_transformation(){
+        // apply the transformation matrix to all triangles
+        for (auto &t : triangles)
+        {
+            // apply transformation to each vertex of the triangle
+            for(int i = 0; i < 3; i++){
+                Vector4f v = Vector4f(t->vertices[i][0], t->vertices[i][1], t->vertices[i][2], 1.0f);
+                v = transformation * v;
+                t->vertices[i] = v.head<3>(); // apply transformation and write back
+            }
         }
     }
 
 private:
+    Eigen::Matrix4f transformation;
+
     // these helper functions are modified from HW1 codes
     Eigen::Matrix4f get_translation(const Eigen::Vector3f &translation) {
         // Calculate a transformation matrix of given translation vector.
