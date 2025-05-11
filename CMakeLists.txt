@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(Rasterizer)
 
-# 默认Debug模式，通过命令行参数 -DCMAKE_BUILD_TYPE=Release 切换
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release) # 默认使用Release模式
 endif()
 
 message(STATUS "Build mode: ${CMAKE_BUILD_TYPE}")
@@ -20,5 +19,5 @@ find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 include_directories(${EIGEN3_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
-add_executable(task1 main.cc)
-target_link_libraries(task1 ${OpenCV_LIBRARIES})
+add_executable(main main.cc)
+target_link_libraries(main ${OpenCV_LIBRARIES})

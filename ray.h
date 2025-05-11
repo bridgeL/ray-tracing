@@ -6,19 +6,19 @@ class ray
 public:
     ray() {}
 
-    ray(const Vector3f &origin, const Vector3f &direction) : orig(origin), dir(direction) {}
+    ray(const vec3 &origin, const vec3 &direction) : orig(origin), dir(direction) {}
 
-    const Vector3f &origin() const { return orig; }
-    const Vector3f &direction() const { return dir; }
+    const vec3 &origin() const { return orig; }
+    const vec3 &direction() const { return dir; }
 
-    Vector3f at(double t) const
+    vec3 at(double t) const
     {
         return orig + t * dir;
     }
 
 private:
-    Vector3f orig;
-    Vector3f dir;
+    vec3 orig;
+    vec3 dir;
 };
 
 #endif

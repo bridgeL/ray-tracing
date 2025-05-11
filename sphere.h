@@ -6,17 +6,21 @@
 class sphere : public hittable
 {
 public:
-    sphere(const Vector3f &center, float radius, shared_ptr<material> mat)
-        : center(center), radius(std::fmax(0, radius)), mat(mat) {
-            box = bbox(center.array() - radius, center.array() + radius);
-        }
+    sphere(const vec3 &center, double radius, shared_ptr<material> mat)
+        : center(center), radius(std::fmax(0, radius)), mat(mat)
+    {
+        b = bbox(
+            interval(center.x() - radius, center.x() + radius),
+            interval(center.y() - radius, center.y() + radius),
+            interval(center.z() - radius, center.z() + radius));
+    }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
-        Vector3f oc = center - r.origin();
-        auto a = r.direction().squaredNorm();
+        vec3 oc = center - r.origin();
+        auto a = r.direction().length_squared();
         auto h = r.direction().dot(oc);
-        auto c = oc.squaredNorm() - radius * radius;
+        auto c = oc.length_squared() - radius * radius;
 
         auto discriminant = h * h - a * c;
         if (discriminant < 0)
@@ -35,16 +39,28 @@ public:
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        rec.normal = (rec.p - center) / radius;
+        vec3 outward_normal = (rec.p - center) / radius;
+        rec.set_face_normal(r, outward_normal);
+
+        // TODO:
+        rec.u = 0;
+        rec.v = 0;
+
         rec.mat = mat;
 
         return true;
     }
 
+    bbox get_bbox() const override
+    {
+        return b;
+    }
+
 private:
-    Vector3f center;
-    float radius;
+    vec3 center;
+    double radius;
     shared_ptr<material> mat;
+    bbox b;
 };
 
 #endif

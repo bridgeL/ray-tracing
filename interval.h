@@ -6,9 +6,15 @@ class interval
 public:
     double min, max;
 
-    interval() : min(+infinity), max(-infinity) {} // Default interval is empty
-
+    interval() {}
     interval(double min, double max) : min(min), max(max) {}
+
+    // merge two intervals
+    interval(const interval &a, const interval &b)
+    {
+        min = a.min < b.min ? a.min : b.min;
+        max = a.max > b.max ? a.max : b.max;
+    }
 
     double size() const
     {
@@ -35,6 +41,11 @@ public:
     }
 
     static const interval empty, universe;
+
+    std::string toString() const
+    {
+        return "[" + std::to_string(min) + ", " + std::to_string(max) + "]";
+    }
 };
 
 const interval interval::empty = interval(+infinity, -infinity);

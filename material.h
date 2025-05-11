@@ -7,29 +7,24 @@ public:
     virtual ~material() = default;
 
     virtual bool scatter(
-        const ray &r_in, const hit_record &rec, Vector3f &attenuation, ray &scattered) const
+        const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered) const
     {
         return false;
-    }
-
-    virtual Vector3f mix_color(const Vector3f &origin, const Vector3f &new_color) const
-    {
-        return Vector3f(0, 0, 0);
     }
 };
 
 class lambertian : public material
 {
 public:
-    lambertian(const Vector3f &albedo) : albedo(albedo) {}
+    lambertian(const vec3 &albedo) : albedo(albedo) {}
 
-    bool scatter(const ray &r_in, const hit_record &rec, Vector3f &attenuation, ray &scattered)
+    bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered)
         const override
     {
-        Vector3f scatter_direction = rec.normal + random_unit_vector();
+        vec3 scatter_direction = rec.normal + random_unit_vector();
 
         // Catch degenerate scatter direction
-        if (near_zero_vector(scatter_direction))
+        if (scatter_direction.near_zero())
             scatter_direction = rec.normal;
 
         scattered = ray(rec.p, scatter_direction);
@@ -37,50 +32,41 @@ public:
         return true;
     }
 
-    Vector3f mix_color(const Vector3f &origin, const Vector3f &new_color)
-        const override
-    {
-        return origin.cwiseProduct(new_color) ;
-    }
-
 private:
-    Vector3f albedo;
+    vec3 albedo;
 };
 
 class textured_lambertian : public material
 {
 public:
-    textured_lambertian(cv::Mat &image_data) : image_data(image_data) {}
+    textured_lambertian(const cv::Mat &image_data) : image_data(image_data) {}
 
-    bool scatter(const ray &r_in, const hit_record &rec, Vector3f &attenuation, ray &scattered)
+    bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered)
         const override
     {
-        Vector3f scatter_direction = rec.normal + random_unit_vector();
+        vec3 scatter_direction = rec.normal + random_unit_vector();
 
         // Catch degenerate scatter direction
-        if (near_zero_vector(scatter_direction))
+        if (scatter_direction.near_zero())
             scatter_direction = rec.normal;
 
         scattered = ray(rec.p, scatter_direction);
 
-        float u = rec.texture_coord[0];
-        float v = rec.texture_coord[1];
+        double u = rec.u;
+        double v = rec.v;
         attenuation = get_color(u, v);
         return true;
     }
 
-    Vector3f get_color(float u, float v) const
+    vec3 get_color(double u, double v) const
     {
+        if (u < 0 || v < 0)
+            return vec3(0, 0, 0);
+
         auto u_img = u * image_data.cols;       // width
         auto v_img = (1 - v) * image_data.rows; // height
-        auto color = image_data.at<cv::Vec3b>(v_img, u_img);
-        return Vector3f(color[0], color[1], color[2]);
-    }
-
-    Vector3f mix_color(const Vector3f &origin, const Vector3f &new_color)
-        const override
-    {
-        return origin.cwiseProduct(new_color) ;
+        auto color = image_data.at<cv::Vec3b>(v_img, u_img) / 255.0;
+        return vec3(color[0], color[1], color[2]);
     }
 
 private:
@@ -90,26 +76,20 @@ private:
 class metal : public material
 {
 public:
-    metal(const Vector3f &albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
+    metal(const vec3 &albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
 
-    bool scatter(const ray &r_in, const hit_record &rec, Vector3f &attenuation, ray &scattered)
+    bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered)
         const override
     {
-        Vector3f reflected = reflect(r_in.direction(), rec.normal);
+        vec3 reflected = reflect(r_in.direction(), rec.normal);
         reflected = reflected.normalized() + (fuzz * random_unit_vector());
         scattered = ray(rec.p, reflected);
         attenuation = albedo;
         return (scattered.direction().dot(rec.normal) > 0);
     }
 
-    Vector3f mix_color(const Vector3f &origin, const Vector3f &new_color)
-        const override
-    {
-        return origin.cwiseProduct(new_color);
-    }
-
 private:
-    Vector3f albedo;
+    vec3 albedo;
     double fuzz;
 };
 

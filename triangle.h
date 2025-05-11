@@ -5,168 +5,193 @@
 #include "ray.h"
 #include "interval.h"
 
+class vertex
+{
+public:
+    vec3 pos;
+    double u;
+    double v;
+    vec3 normal;
+
+    vertex() {}
+    vertex(const vec3 &pos) : pos(pos), u(-1), v(-1), normal(vec3(0, 0, 0)) {}
+    vertex(const vec3 &pos, double u, double v, const vec3 &normal) : pos(pos), u(u), v(v), normal(normal) {}
+
+    std::string toString() const
+    {
+        std::ostringstream oss;
+        oss << "Vertex {\n"
+            << "  pos: (" << pos.x() << ", " << pos.y() << ", " << pos.z() << ")\n"
+            << "  uv: (" << u << ", " << v << ")\n"
+            << "  normal: (" << normal.x() << ", " << normal.y() << ", " << normal.z() << ")\n"
+            << "}";
+        return oss.str();
+    }
+};
+
 class triangle : public hittable
 {
 public:
-    triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
-             shared_ptr<material> mat)
-        : mat(mat)
-    {
-        vertices[0] = p0;
-        vertices[1] = p1;
-        vertices[2] = p2;
+    vertex vertices[3];
+    vec3 normal;
+    shared_ptr<material> mat;
+    bbox b;
 
-        // Compute normal once for the triangle
-        normal = (p1 - p0).cross(p2 - p0).normalized();
-        
-        box = create_bbox();
+    triangle(
+        const vertex &p0,
+        const vertex &p1,
+        const vertex &p2,
+        const vec3 &normal,
+        shared_ptr<material> mat) : mat(mat),
+                                    normal(normal),
+                                    vertices({p0, p1, p2})
+    {
+        calculateBBox();
     }
 
-    triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
-             const Vector3f &normal,
-             shared_ptr<material> mat)
-        : mat(mat), normal(normal)
+    triangle(
+        const vertex &p0,
+        const vertex &p1,
+        const vertex &p2,
+        shared_ptr<material> mat) : mat(mat),
+                                    vertices({p0, p1, p2})
     {
-        vertices[0] = p0;
-        vertices[1] = p1;
-        vertices[2] = p2;
-        
-        box = create_bbox();
-    }
-
-    triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
-             const Vector2f &t0, const Vector2f &t1, const Vector2f &t2,
-             shared_ptr<material> mat)
-        : mat(mat)
-    {
-        vertices[0] = p0;
-        vertices[1] = p1;
-        vertices[2] = p2;
-
-        texture_coords[0] = t0;
-        texture_coords[1] = t1;
-        texture_coords[2] = t2;
-
-        // Compute normal once for the triangle
-        normal = (p1 - p0).cross(p2 - p0).normalized();
-
-        box = create_bbox();
-    }
-
-    triangle(const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
-             const Vector2f &t0, const Vector2f &t1, const Vector2f &t2,
-             const Vector3f &normal,
-             shared_ptr<material> mat)
-        : mat(mat), normal(normal)
-    {
-        vertices[0] = p0;
-        vertices[1] = p1;
-        vertices[2] = p2;
-
-        texture_coords[0] = t0;
-        texture_coords[1] = t1;
-        texture_coords[2] = t2;
-
-        box = create_bbox();
-    }
-
-    bbox create_bbox()
-    {
-        return bbox(
-            Vector3f(
-                std::min({vertices[0][0], vertices[1][0], vertices[2][0]}),
-                std::min({vertices[0][1], vertices[1][1], vertices[2][1]}),
-                std::min({vertices[0][2], vertices[1][2], vertices[2][2]})),
-            Vector3f(
-                std::max({vertices[0][0], vertices[1][0], vertices[2][0]}),
-                std::max({vertices[0][1], vertices[1][1], vertices[2][1]}),
-                std::max({vertices[0][2], vertices[1][2], vertices[2][2]})));
+        calculateBBox();
+        calculateNormal();
     }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
-        Vector3f p1 = vertices[0];
-        Vector3f p2 = vertices[1];
-        Vector3f p3 = vertices[2];
+        vec3 p1 = vertices[0].pos;
+        vec3 p2 = vertices[1].pos;
+        vec3 p3 = vertices[2].pos;
 
-        Vector3f v1 = p1 - p2;
-        Vector3f v2 = p1 - p3;
-        float d = normal.dot(r.direction());
+        vec3 v1 = p1 - p2;
+        vec3 v2 = p1 - p3;
+        double d = normal.dot(r.direction());
+
+        // 排除平行情况
         if (abs(d) < 1e-16)
             return false;
 
-        float t = normal.dot(p1 - r.origin()) / d;
-        if (t < 0)
-            return false;
+        double t = normal.dot(p1 - r.origin()) / d;
 
-        // 获取与平面的交点
-        Vector3f p = r.at(t);
-
-        // 获取与交点的距离
+        // 判断光线是否已被阻挡
         if (!ray_t.contains(t))
             return false;
 
-        // 判断是否在三角形内
+        // 获取与平面的交点，判断是否在三角形内
+        vec3 p = r.at(t);
         if (!insideTriangle(p))
             return false;
 
         // 记录相交情况
         rec.t = t;
         rec.p = p;
-        rec.normal = normal;
+        rec.set_face_normal(r, normal);
         rec.mat = mat;
-        rec.texture_coord = interpolate(computeBarycentric(p), texture_coords[0], texture_coords[1], texture_coords[2]);
+        rec.u = interpolate(computeBarycentric(p), vertices[0].u, vertices[1].u, vertices[2].u);
+        rec.v = interpolate(computeBarycentric(p), vertices[0].v, vertices[1].v, vertices[2].v);
 
         return true;
     }
 
-    Vector3f computeBarycentric(const Vector3f &p) const
+    bbox get_bbox() const override
     {
-        Vector3f p1 = vertices[0];
-        Vector3f p2 = vertices[1];
-        Vector3f p3 = vertices[2];
-
-        Vector3f v1 = p2 - p1;
-        Vector3f v2 = p3 - p1;
-        Vector3f vp = p - p1;
-
-        // 计算法向量 n = v1 × v2（用于统一分母）
-        Vector3f n = v1.cross(v2);
-        float denom = n.squaredNorm(); // 分母 = (v1 × v2) · n = |v1 × v2|^2
-
-        // 计算 u 和 v
-        float u = vp.cross(v2).dot(n) / denom;
-        float v = v1.cross(vp).dot(n) / denom;
-        float w = 1 - u - v;
-
-        return Vector3f(u, v, w);
+        return b;
     }
 
-    bool insideTriangle(const Vector3f &p) const
+    std::string toString() const
+    {
+        std::ostringstream oss;
+        oss << "Triangle {\n";
+        for (int i = 0; i < 3; ++i)
+        {
+            oss << "  v" << i << ": " << vertices[i].toString() << "\n";
+        }
+        oss << "  face_normal: (" << normal.x() << ", " << normal.y() << ", " << normal.z() << ")\n"
+            << "}";
+        return oss.str();
+    }
+
+    // 包围盒计算
+    void calculateBBox()
+    {
+        const vertex &p0 = vertices[0];
+        const vertex &p1 = vertices[1];
+        const vertex &p2 = vertices[2];
+
+        double xs[3] = {p0.pos.x(), p1.pos.x(), p2.pos.x()};
+        double ys[3] = {p0.pos.y(), p1.pos.y(), p2.pos.y()};
+        double zs[3] = {p0.pos.z(), p1.pos.z(), p2.pos.z()};
+
+        b = bbox(
+            interval(std::min({xs[0], xs[1], xs[2]}), std::max({xs[0], xs[1], xs[2]})),
+            interval(std::min({ys[0], ys[1], ys[2]}), std::max({ys[0], ys[1], ys[2]})),
+            interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})));
+    }
+
+    // 法向量计算
+    void calculateNormal()
+    {
+        const vertex &p0 = vertices[0];
+        const vertex &p1 = vertices[1];
+        const vertex &p2 = vertices[2];
+
+        normal = (p1.pos - p0.pos).cross(p2.pos - p0.pos).normalized();
+    }
+
+private:
+    vec3 computeBarycentric(const vec3 &p) const
+    {
+        vec3 p1 = vertices[0].pos;
+        vec3 p2 = vertices[1].pos;
+        vec3 p3 = vertices[2].pos;
+
+        // 计算向量
+        vec3 v0 = p2 - p1;
+        vec3 v1 = p3 - p1;
+        vec3 v2 = p - p1;
+
+        // 计算叉积面积
+        float d00 = v0.dot(v0);
+        float d01 = v0.dot(v1);
+        float d11 = v1.dot(v1);
+        float d20 = v2.dot(v0);
+        float d21 = v2.dot(v1);
+
+        float denom = d00 * d11 - d01 * d01;
+
+        // 防止除零
+        if (denom == 0.0f)
+            return vec3(-1.0f, -1.0f, -1.0f); // 或者根据你的需求返回特殊值
+
+        float v = (d11 * d20 - d01 * d21) / denom;
+        float w = (d00 * d21 - d01 * d20) / denom;
+        float u = 1.0f - v - w;
+
+        return vec3(u, v, w);
+    }
+
+    bool insideTriangle(const vec3 &p) const
     {
         // 计算点p到三条边的叉积符号
-        Vector3f p1 = vertices[0];
-        Vector3f p2 = vertices[1];
-        Vector3f p3 = vertices[2];
+        vec3 p1 = vertices[0].pos;
+        vec3 p2 = vertices[1].pos;
+        vec3 p3 = vertices[2].pos;
 
-        Vector3f c1 = (p - p1).cross(p2 - p1);
-        Vector3f c2 = (p - p2).cross(p3 - p2);
-        Vector3f c3 = (p - p3).cross(p1 - p3);
+        vec3 c1 = (p - p1).cross(p2 - p1);
+        vec3 c2 = (p - p2).cross(p3 - p2);
+        vec3 c3 = (p - p3).cross(p1 - p3);
 
         // 检查符号一致性（与法向量点积）
-        float dot1 = c1.dot(normal);
-        float dot2 = c2.dot(normal);
-        float dot3 = c3.dot(normal);
+        double dot1 = c1.dot(normal);
+        double dot2 = c2.dot(normal);
+        double dot3 = c3.dot(normal);
 
         // 如果所有点积同号（包括等于0的情况，表示在边上）
         return (dot1 >= 0 && dot2 >= 0 && dot3 >= 0) || (dot1 <= 0 && dot2 <= 0 && dot3 <= 0);
     }
-
-private:
-    Vector3f vertices[3];
-    Vector2f texture_coords[3];
-    Vector3f normal;
-    shared_ptr<material> mat;
 };
 
 #endif

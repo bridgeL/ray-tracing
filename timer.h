@@ -23,7 +23,7 @@ public:
     {
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << message << "Time elapsed: " << duration.count() << " ms\n";
+        std::cout << message << duration.count() << " ms\n";
     }
 
 private:

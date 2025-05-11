@@ -21,7 +21,6 @@ Our goal is to implement an optimized ray tracer based on **Ray Tracing in One W
 ```
 sudo apt install -y cmake g++ gdb
 sudo apt install libopencv-dev
-sudo apt install libeigen3-dev
 ```
 
 ## How to run
@@ -29,9 +28,8 @@ sudo apt install libeigen3-dev
 ```
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make
-./task1
+cmake .. 
+make && ./main
 ```
 
 ## Technical Approach
