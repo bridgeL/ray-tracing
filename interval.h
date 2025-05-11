@@ -41,6 +41,11 @@ public:
     }
 
     static const interval empty, universe;
+
+    std::string toString() const
+    {
+        return "[" + std::to_string(min) + ", " + std::to_string(max) + "]";
+    }
 };
 
 const interval interval::empty = interval(+infinity, -infinity);

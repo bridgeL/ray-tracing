@@ -45,6 +45,17 @@ public:
     }
 
     static const bbox empty, universe;
+
+    std::string toString() const
+    {
+        std::ostringstream oss;
+        oss << "bbox[\n"
+            << "  x: " << x.toString() << "\n"
+            << "  y: " << y.toString() << "\n"
+            << "  z: " << z.toString() << "\n"
+            << "]";
+        return oss.str();
+    }
 };
 
 const bbox bbox::empty = bbox(interval::empty, interval::empty, interval::empty);

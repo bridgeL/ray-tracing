@@ -39,7 +39,7 @@ private:
 class textured_lambertian : public material
 {
 public:
-    textured_lambertian(cv::Mat &image_data) : image_data(image_data) {}
+    textured_lambertian(const cv::Mat &image_data) : image_data(image_data) {}
 
     bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered)
         const override
@@ -62,7 +62,7 @@ public:
     {
         auto u_img = u * image_data.cols;       // width
         auto v_img = (1 - v) * image_data.rows; // height
-        auto color = image_data.at<cv::Vec3b>(v_img, u_img);
+        auto color = image_data.at<cv::Vec3b>(v_img, u_img) / 255.0;
         return vec3(color[0], color[1], color[2]);
     }
 

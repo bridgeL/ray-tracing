@@ -11,6 +11,8 @@ public:
     int samples_per_pixel = 10; // Count of random samples for each pixel
     int max_depth = 10;         // Maximum number of ray bounces into scene
 
+    double screen_scale = 1.0;
+
     double vfov = 90;              // Vertical view angle (field of view)
     vec3 lookfrom = vec3(0, 0, 0); // Point camera is looking from
     vec3 lookat = vec3(0, 0, -1);  // Point camera is looking at
@@ -82,7 +84,7 @@ public:
         defocus_disk_v = v * defocus_radius;
 
         // create screen
-        screen = Screen(image_width, image_height);
+        screen = Screen(image_width, image_height, screen_scale);
         screen.clear();
 
         std::cout << "image size: " << image_width << ' ' << image_height << std::endl;
