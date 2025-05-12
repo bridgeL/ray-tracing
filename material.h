@@ -1,6 +1,8 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include "texture.h"
+
 class material
 {
 public:
@@ -16,7 +18,8 @@ public:
 class lambertian : public material
 {
 public:
-    lambertian(const vec3 &albedo) : albedo(albedo) {}
+    lambertian(const vec3 &albedo) : tex(make_shared<solid_color>(albedo)) {}
+    lambertian(shared_ptr<texture> tex) : tex(tex) {}
 
     bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered)
         const override
@@ -28,12 +31,12 @@ public:
             scatter_direction = rec.normal;
 
         scattered = ray(rec.p, scatter_direction);
-        attenuation = albedo;
+        attenuation = tex->value(rec.u, rec.v);
         return true;
     }
 
 private:
-    vec3 albedo;
+    shared_ptr<texture> tex;
 };
 
 class textured_lambertian : public material
@@ -51,21 +54,20 @@ public:
             scatter_direction = rec.normal;
 
         scattered = ray(rec.p, scatter_direction);
-
-        double u = rec.u;
-        double v = rec.v;
-        attenuation = get_color(u, v);
+        attenuation = get_color(rec.u, rec.v);
         return true;
     }
 
     vec3 get_color(double u, double v) const
     {
-        if (u < 0 || v < 0)
-            return vec3(0, 0, 0);
+        // Clamp input texture coordinates to [0,1] x [1,0]
+        u = interval(0, 1).clamp(u);
+        v = 1.0 - interval(0, 1).clamp(v); // Flip V to image coordinates
 
-        auto u_img = u * image_data.cols;       // width
-        auto v_img = (1 - v) * image_data.rows; // height
-        auto color = image_data.at<cv::Vec3b>(v_img, u_img) / 255.0;
+        auto i = int(u * image_data.cols);
+        auto j = int(v * image_data.rows);
+        auto color = image_data.at<cv::Vec3b>(i, j) / 255.0;
+
         return vec3(color[0], color[1], color[2]);
     }
 
