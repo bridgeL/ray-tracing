@@ -12,6 +12,8 @@ public:
     int max_depth = 10;         // Maximum number of ray bounces into scene
 
     double screen_scale = 1.0;
+    std::string screen_name = "image";
+    vec3 background_color = vec3(1,1,1);
 
     double vfov = 90;              // Vertical view angle (field of view)
     vec3 lookfrom = vec3(0, 0, 0); // Point camera is looking from
@@ -86,7 +88,7 @@ public:
         defocus_disk_v = v * defocus_radius;
 
         // create screen
-        screen = Screen(image_width, image_height, screen_scale);
+        screen = Screen(image_width, image_height, screen_scale, screen_name);
         screen.clear();
 
         std::cout << "image size: " << image_width << ' ' << image_height << std::endl;
@@ -156,7 +158,7 @@ private:
         bool hit_anything = world.hit(r, interval(0.001, infinity), rec);
 
         if (!hit_anything)
-            return vec3(0.5, 0.5, 0.5);
+            return background_color;
 
         ray scattered;
         vec3 attenuation;
