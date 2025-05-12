@@ -214,8 +214,8 @@ public:
                 double u, v;
                 iss >> u >> v;
 
-                u = normalizeUV(u);
-                v = normalizeUV(v);
+                // u = normalizeUV(u);
+                // v = normalizeUV(v);
 
                 vt_u_list.push_back(u);
                 vt_v_list.push_back(v);
