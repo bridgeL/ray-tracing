@@ -31,7 +31,15 @@ public:
             scatter_direction = rec.normal;
 
         scattered = ray(rec.p, scatter_direction);
-        attenuation = tex->value(rec.u, rec.v);
+
+        // show hit depth at bvh tree
+        // 如果画面偏红，说明bvh tree的节点深度普遍超过 h/2
+        // ln(949496)≈13.763
+        int h = 200;
+        attenuation = convert_int_to_color(rec.depth, h);
+
+        // 这是原来的函数
+        // attenuation = tex->value(rec.u, rec.v);
         return true;
     }
 

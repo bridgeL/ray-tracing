@@ -8,29 +8,20 @@
 int main(int argc, char *argv[])
 {
 
-    // 检查参数数量（程序名 + 至少1个参数）
-    if (argc < 3)
+    // 检查参数数量（程序名 + 至少4个参数）
+    if (argc < 4)
     {
-        std::cerr << "usage: " << argv[0] << " <rotate degree> <camera position choice>" << std::endl;
+        std::cerr << "usage: " << argv[0] << " <rotate degree> <camera position choice> <sample quality>" << std::endl;
         return 1; // 非零返回值表示错误
     }
 
     float degree = std::stof(argv[1]);
     int camera_choice = std::stoi(argv[2]);
+    int sample_num = std::stoi(argv[3]);
 
     ScopedTimer timer;
-
     hittable_list world;
-
-    // {
-    //     world.add(make_shared<sphere>(
-    //         vec3(0, -1000, 0), 1000,
-    //         make_shared<lambertian>(vec3(0.7, 0.7, 0.7))));
-    // }
-
-    auto loader = ObjLoader();
-    // loader.read_obj("model/cow.obj", "model/cow2.png");
-    // loader.read_obj("model/room/room.obj", "model/cow.png");
+    ObjLoader loader;
 
     timer.start_timer("Load time: ");
     loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
@@ -51,7 +42,9 @@ int main(int argc, char *argv[])
 
     cam.aspect_ratio = 1.0 / 1.0;
     cam.image_width = 600;
-    cam.samples_per_pixel = 500;
+    cam.samples_per_pixel = sample_num == 0   ? 400
+                            : sample_num == 1 ? 100
+                                              : 10;
     cam.max_depth = 20;
 
     cam.background_color = vec3(1, 1, 1);

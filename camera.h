@@ -13,7 +13,7 @@ public:
 
     double screen_scale = 1.0;
     std::string screen_name = "image";
-    vec3 background_color = vec3(1,1,1);
+    vec3 background_color = vec3(1, 1, 1);
 
     double vfov = 90;              // Vertical view angle (field of view)
     vec3 lookfrom = vec3(0, 0, 0); // Point camera is looking from
@@ -33,7 +33,14 @@ public:
         {
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++)
-            {
+            {   
+                // 展示一条渐变色带，帮助我们分析bvh tree到底有多深，各个像素点又是位于多深的位置被命中的
+                if (j < 10)
+                {
+                    screen.set_color(i, j, convert_int_to_color(i, image_width));
+                    continue;
+                }
+
                 vec3 pixel_color(0, 0, 0);
                 for (int sample = 0; sample < samples_per_pixel; sample++)
                 {

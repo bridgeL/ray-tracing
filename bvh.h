@@ -77,6 +77,7 @@ public:
             return hit_anything;
         }
 
+        rec.depth += 1;
         bool hit_left = left->hit(r, ray_t, rec);
         bool hit_right = right->hit(r, interval(ray_t.min, hit_left ? rec.t : ray_t.max), rec);
 
@@ -108,5 +109,12 @@ private:
         return a->get_bbox().z.min < b->get_bbox().z.min;
     }
 };
+
+vec3 convert_int_to_color(int v, int n)
+{
+    float r = interval(0, n).clamp(v) * 2 / n;
+    // while value growing: blue -> green -> red
+    return r < 1.0 ? vec3(0, r, 1 - r) : vec3(r - 1, 2 - r, 0);
+}
 
 #endif

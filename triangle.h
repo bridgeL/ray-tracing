@@ -126,9 +126,9 @@ public:
         double zs[3] = {p0.pos.z(), p1.pos.z(), p2.pos.z()};
 
         b = bbox(
-            interval(std::min({xs[0], xs[1], xs[2]}), std::max({xs[0], xs[1], xs[2]})),
-            interval(std::min({ys[0], ys[1], ys[2]}), std::max({ys[0], ys[1], ys[2]})),
-            interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})));
+            interval(std::min({xs[0], xs[1], xs[2]}), std::max({xs[0], xs[1], xs[2]})).pad(1e-5),
+            interval(std::min({ys[0], ys[1], ys[2]}), std::max({ys[0], ys[1], ys[2]})).pad(1e-5),
+            interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})).pad(1e-5));
     }
 
     // 法向量计算
