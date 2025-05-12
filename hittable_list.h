@@ -21,9 +21,9 @@ public:
         b = bbox(b, object->get_bbox());
     }
 
-    void create_bvh_tree(int max_leaf_size = 5)
+    void create_bvh_tree(int max_leaf_size = 5, BVHSplitMethod split_method = BVHSplitMethod::MIDDLE)
     {
-        bvh_tree = make_shared<BVHNode>(objects, 0, objects.size(), max_leaf_size);
+        bvh_tree = make_shared<BVHNode>(objects, 0, objects.size(), max_leaf_size, split_method);
     }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override

@@ -16,6 +16,11 @@ public:
         max = a.max > b.max ? a.max : b.max;
     }
 
+    double centroid() const
+    {
+        return (min + max) / 2;
+    }
+
     double size() const
     {
         return max - min;

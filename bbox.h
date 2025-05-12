@@ -25,16 +25,36 @@ public:
         return 2;
     }
 
-    // 新增：射线相交检测
+    interval get(int axis) const
+    {
+        return axis == 0   ? x
+               : axis == 1 ? y
+                           : z;
+    }
+
+    // 计算包围盒的表面积
+    double surface_area() const
+    {
+        if (x.size() == 0 || y.size() == 0 || z.size() == 0)
+            return 0.0; // 空包围盒的表面积为0
+
+        double dx = x.size();
+        double dy = y.size();
+        double dz = z.size();
+
+        // 表面积 = 2*(dx*dy + dx*dz + dy*dz)
+        return 2.0 * (dx * dy + dx * dz + dy * dz);
+    }
+
+    // 射线相交检测
     bool hit(const ray &r, interval ray_t) const
     {
-        interval m[3] = {x, y, z};
         for (int i = 0; i < 3; i++)
         {
-            double invD = 1.0f / r.direction()[i];
-            double t0 = (m[i].min - r.origin()[i]) * invD;
-            double t1 = (m[i].max - r.origin()[i]) * invD;
-            if (invD < 0.0f)
+            double invD = 1.0 / r.direction()[i];
+            double t0 = (get(i).min - r.origin()[i]) * invD;
+            double t1 = (get(i).max - r.origin()[i]) * invD;
+            if (invD < 0.0)
                 std::swap(t0, t1);
             ray_t.min = t0 > ray_t.min ? t0 : ray_t.min;
             ray_t.max = t1 < ray_t.max ? t1 : ray_t.max;

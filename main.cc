@@ -23,11 +23,12 @@ int main(int argc, char *argv[])
     hittable_list world;
     ObjLoader loader;
 
-    timer.start_timer("Load time: ");
-    loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
+    timer.start_timer("[Timer] Load: ");
+    loader.read_obj("model/cow.obj", "model/cow2.png");
+    // loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
     timer.stop_timer();
 
-    timer.start_timer("Tranformation time: ");
+    timer.start_timer("[Timer] Tranformation: ");
     loader.set_rotate(degree, vec3(0, 1, 0));
     // loader.set_scale(0.9);
     // loader.set_translate(0.1, 0.1, 0);
@@ -74,12 +75,14 @@ int main(int argc, char *argv[])
     cam.focus_dist = 10.0;
 
     // create bvh tree
-    timer.start_timer("BVH time: ");
-    world.create_bvh_tree(1);
+    timer.start_timer("[Timer] BVH: ");
+    bvh_visualization_mat::set_h(200);
+    std::cout << "BVH visualization max depth: " << bvh_visualization_mat::h << std::endl;
+    world.create_bvh_tree(1, BVHSplitMethod::MIDDLE);
     timer.stop_timer();
 
     // rendering
-    timer.start_timer("Render time: ");
+    timer.start_timer("[Timer] Render: ");
     cam.initialize();
     cam.render(world, true);
     timer.stop_timer();

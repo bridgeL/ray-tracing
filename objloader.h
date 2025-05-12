@@ -25,6 +25,7 @@ public:
     inline bool read_obj(const std::string &filename, const std::string &texturename)
     {
         std::string filepath = "../" + filename;
+        std::string texturepath = "../" + texturename;
         if (filepath.substr(filepath.size() - 4, 4) != ".obj")
         {
             std::cerr << "Error: only obj files are supported. Read aborted." << std::endl;
@@ -39,7 +40,8 @@ public:
         }
 
         // read texture
-        auto mat = make_shared<lambertian>(make_shared<image_texture>(texturename));
+        auto mat = make_shared<bvh_visualization_mat>(make_shared<image_texture>(texturepath));
+        // auto mat = make_shared<lambertian>(make_shared<image_texture>(texturepath));
 
         // defalt values
         v_list.push_back(vec3(0, 0, 0));
@@ -172,13 +174,15 @@ public:
             {
                 double r, b, g;
                 iss >> r >> g >> b;
-                auto mat = make_shared<lambertian>(vec3(r, g, b));
+                auto mat = make_shared<bvh_visualization_mat>(vec3(r, g, b));
+                // auto mat = make_shared<lambertian>(vec3(r, g, b));
                 materials[matname] = mat; // read and put texture into map
             }
             else if ("map_Kd" == prefix)
             {
                 iss >> texturepath;
-                auto mat = make_shared<lambertian>(make_shared<image_texture>(textureprefix + texturepath));
+                auto mat = make_shared<bvh_visualization_mat>(make_shared<image_texture>(textureprefix + texturepath));
+                // auto mat = make_shared<lambertian>(make_shared<image_texture>(textureprefix + texturepath));
                 materials[matname] = mat; // read and put texture into map
             }
         }
@@ -189,7 +193,8 @@ public:
         vn_list.push_back(vec3(0, 0, 0));
         vt_u_list.push_back(0);
         vt_v_list.push_back(0);
-        materials["default"] = make_shared<lambertian>(vec3(0.5, 0.5, 0.5)); // default material
+        materials["default"] = make_shared<bvh_visualization_mat>(vec3(0.5, 0.5, 0.5)); // default material
+        // materials["default"] = make_shared<lambertian>(vec3(0.5, 0.5, 0.5)); // default material
 
         std::string current_mat = "default"; // default material
         while (std::getline(file, line))
@@ -323,7 +328,7 @@ public:
                 vec3 &pos = tri->vertices[i].pos;
 
                 // 应用变换
-                Eigen::Vector4f a(pos.x(), pos.y(), pos.z(), 1.0f);
+                Eigen::Vector4f a(pos.x(), pos.y(), pos.z(), 1.0);
                 a = transformation * a;
 
                 // 更新顶点坐标
@@ -379,10 +384,10 @@ private:
         float ny = norm_vector.y();
         float nz = norm_vector.z(); // x, y, z value of the normalized axis
 
-        float rad = rotation_angle * 3.1415 / 180.0f; // convert the angle from degree to radian
+        float rad = rotation_angle * 3.1415 / 180.0; // convert the angle from degree to radian
         float cos = std::cos(rad);                    // cos(theta)
         float sin = std::sin(rad);                    // sin(theta)
-        float omc = 1.0f - cos;                       // 1 - cos(theta)
+        float omc = 1.0 - cos;                       // 1 - cos(theta)
 
         // put rotation parameters into the matrix
         Eigen::Matrix3f rotation;
