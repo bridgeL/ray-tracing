@@ -74,7 +74,7 @@ private:
     shared_ptr<texture> tex;
 };
 
-int bvh_visualization_mat::h = 200;
+int bvh_visualization_mat::h = 100;
 
 class metal : public material
 {

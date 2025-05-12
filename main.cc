@@ -24,8 +24,8 @@ int main(int argc, char *argv[])
     ObjLoader loader;
 
     timer.start_timer("[Timer] Load: ");
-    loader.read_obj("model/cow.obj", "model/cow2.png");
-    // loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
+    // loader.read_obj("model/cow.obj", "model/cow2.png");
+    loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
     timer.stop_timer();
 
     timer.start_timer("[Timer] Tranformation: ");
@@ -76,9 +76,9 @@ int main(int argc, char *argv[])
 
     // create bvh tree
     timer.start_timer("[Timer] BVH: ");
-    bvh_visualization_mat::set_h(200);
+    bvh_visualization_mat::set_h(40);
     std::cout << "BVH visualization max depth: " << bvh_visualization_mat::h << std::endl;
-    world.create_bvh_tree(1, BVHSplitMethod::MIDDLE);
+    world.create_bvh_tree(1, BVHSplitMethod::SAH);
     timer.stop_timer();
 
     // rendering
