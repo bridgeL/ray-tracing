@@ -47,13 +47,6 @@ inline double linear_to_gamma(double linear_component)
     return 0;
 }
 
-cv::Mat read_image(const std::string &filepath)
-{
-    auto bgr_image = cv::imread(filepath); // 默认读取为BGR格式
-    cv::Mat rgb_image;
-    cv::cvtColor(bgr_image, rgb_image, cv::COLOR_BGR2RGB);
-    return rgb_image;
-}
 
 double normalizeUV(double uv)
 {
@@ -73,5 +66,6 @@ double normalizeUV(double uv)
 #include "hittable_list.h"
 #include "material.h"
 #include "bvh.h"
+#include "texture.h"
 
 #endif

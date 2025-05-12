@@ -34,10 +34,10 @@ public:
         auto g = pixel_color.y();
         auto b = pixel_color.z();
 
-        // Apply gamma correction
-        r = linear_to_gamma(r);
-        g = linear_to_gamma(g);
-        b = linear_to_gamma(b);
+        // // Apply gamma correction
+        // r = linear_to_gamma(r);
+        // g = linear_to_gamma(g);
+        // b = linear_to_gamma(b);
 
         // Clamp to [0, 0.999] and convert to [0,255]
         static const interval intensity(0.000, 0.999);

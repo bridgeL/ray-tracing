@@ -21,8 +21,9 @@ public:
     std::vector<shared_ptr<triangle>> triangles; // triangles
     ObjLoader() {}
 
-    inline bool read_obj(const std::string &filepath, const std::string &texturepath)
+    inline bool read_obj(const std::string &filename, const std::string &texturename)
     {
+        std::string filepath = "../" + filename;
         if (filepath.substr(filepath.size() - 4, 4) != ".obj")
         {
             std::cerr << "Error: only obj files are supported. Read aborted." << std::endl;
@@ -37,8 +38,7 @@ public:
         }
 
         // 读取texture
-        auto texture_data = read_image(texturepath);
-        auto mat = std::make_shared<textured_lambertian>(texture_data);
+        auto mat = make_shared<lambertian>(make_shared<image_texture>(texturename));
 
         // 默认缺省值
         v_list.push_back(vec3(0, 0, 0));
