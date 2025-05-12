@@ -14,8 +14,9 @@ public:
         start_timer();
     }
 
-    void start_timer()
+    void start_timer(const std::string &msg = "")
     {
+        message = msg;
         start = std::chrono::high_resolution_clock::now();
     }
 

@@ -11,7 +11,7 @@ public:
     interval z;
 
     bbox() {}
-    bbox(const interval &x, const interval &y, const interval &z) : x(x), y(y), z(z) {}
+    bbox(const interval &x, const interval &y, const interval &z) : x(x.pad(0.001)), y(y.pad(0.001)), z(z.pad(0.001)) {}
 
     // merge two bounding boxes
     bbox(const bbox &a, const bbox &b) : x(a.x, b.x), y(a.y, b.y), z(a.z, b.z) {}

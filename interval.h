@@ -31,6 +31,11 @@ public:
         return min < x && x < max;
     }
 
+    interval pad(double s) const
+    {
+        return interval(min - s, max + s);
+    }
+
     double clamp(double x) const
     {
         if (x < min)

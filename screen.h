@@ -12,10 +12,11 @@ private:
     int width;
     int height;
     double scale;
+    std::string name;
 
 public:
     Screen() {}
-    Screen(int width, int height, double scale) : width(width), height(height), scale(scale)
+    Screen(int width, int height, double scale, std::string name) : width(width), height(height), scale(scale), name(name)
     {
         image_buffer = new unsigned char[width * height * 3];
     }
@@ -63,7 +64,7 @@ public:
         cv::resize(image, scaled_image, cv::Size(), scale, scale);
 
         // 3. 显示图像
-        cv::imshow("image", scaled_image);
+        cv::imshow(name, scaled_image);
         cv::waitKey(delay);
     }
 

@@ -120,7 +120,8 @@ public:
         return true;
     }
 
-    bool read_obj_with_mtl(const std::string &objname, const std::string &mtlname){
+    bool read_obj_with_mtl(const std::string &objname, const std::string &mtlname)
+    {
         // pre-processing and file validation
         std::string objpath = "../" + objname;
         std::string mtlpath = "../" + mtlname;
@@ -156,19 +157,29 @@ public:
         std::string line;
         std::string matname;
         std::string texturepath;
-        std::string textureprefix = "../model/room/";
+        int i = mtlpath.find_last_of("/");
+        std::string textureprefix = mtlpath.substr(0, i) + "/";
         while (std::getline(mtlfile, line))
         {
             std::istringstream iss(line);
             std::string prefix;
             iss >> prefix;
-            if ("newmtl" == prefix){
+            if ("newmtl" == prefix)
+            {
                 iss >> matname;
             }
-            else if ("map_Kd" == prefix){
+            else if ("Kd" == prefix)
+            {
+                double r, b, g;
+                iss >> r >> g >> b;
+                auto mat = make_shared<lambertian>(vec3(r, g, b));
+                materials[matname] = mat; // read and put texture into map
+            }
+            else if ("map_Kd" == prefix)
+            {
                 iss >> texturepath;
                 auto mat = make_shared<lambertian>(make_shared<image_texture>(textureprefix + texturepath));
-                materials[matname] = mat;    // read and put texture into map
+                materials[matname] = mat; // read and put texture into map
             }
         }
 
@@ -186,17 +197,20 @@ public:
             std::istringstream iss(line);
             std::string prefix;
             iss >> prefix;
-            if ("v" == prefix){
+            if ("v" == prefix)
+            {
                 vec3 pos;
                 iss >> pos[0] >> pos[1] >> pos[2];
                 v_list.push_back(pos);
             }
-            else if ("vn" == prefix){
+            else if ("vn" == prefix)
+            {
                 vec3 normal;
                 iss >> normal[0] >> normal[1] >> normal[2];
                 vn_list.push_back(normal);
             }
-            else if ("vt" == prefix){
+            else if ("vt" == prefix)
+            {
                 double u, v;
                 iss >> u >> v;
 
@@ -206,7 +220,8 @@ public:
                 vt_u_list.push_back(u);
                 vt_v_list.push_back(v);
             }
-            else if ("f" == prefix){
+            else if ("f" == prefix)
+            {
                 std::string vert[3];
                 iss >> vert[0] >> vert[1] >> vert[2];
 
@@ -225,12 +240,15 @@ public:
                 auto p0 = vertex(v_list[v_idx[0]], vt_u_list[vt_idx[0]], vt_v_list[vt_idx[0]], vn_list[vn_idx[0]]);
                 auto p1 = vertex(v_list[v_idx[1]], vt_u_list[vt_idx[1]], vt_v_list[vt_idx[1]], vn_list[vn_idx[1]]);
                 auto p2 = vertex(v_list[v_idx[2]], vt_u_list[vt_idx[2]], vt_v_list[vt_idx[2]], vn_list[vn_idx[2]]);
-                
+
                 // MODIFIED: add material support
                 shared_ptr<material> mat;
-                if(materials.find(current_mat) != materials.end()){
+                if (materials.find(current_mat) != materials.end())
+                {
                     mat = materials[current_mat];
-                } else {
+                }
+                else
+                {
                     mat = materials["default"];
                 }
                 auto tri = make_shared<triangle>(p0, p1, p2, mat);
@@ -252,7 +270,8 @@ public:
                     triangles.push_back(tri2);
                 }
             }
-            else if ("usemtl" == prefix){
+            else if ("usemtl" == prefix)
+            {
                 iss >> current_mat; // update current material
             }
         }

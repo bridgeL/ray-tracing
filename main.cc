@@ -7,6 +7,8 @@
 
 int main()
 {
+    ScopedTimer timer;
+
     hittable_list world;
 
     // {
@@ -15,15 +17,20 @@ int main()
     //         make_shared<lambertian>(vec3(0.7, 0.7, 0.7))));
     // }
 
-    
     auto loader = ObjLoader();
     // loader.read_obj("model/cow.obj", "model/cow2.png");
     // loader.read_obj("model/room/room.obj", "model/cow.png");
+
+    timer.start_timer("Load time: ");
     loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
-    loader.set_rotate(-30, vec3(0, 1, 0));
+    timer.stop_timer();
+
+    timer.start_timer("Tranformation time: ");
+    // loader.set_rotate(-30, vec3(0, 1, 0));
     // loader.set_scale(0.9);
-    // loader.set_translate(1, 1, 0);
+    // loader.set_translate(0.1, 0.1, 0);
     loader.apply_transformation();
+    timer.stop_timer();
 
     for (size_t i = 0; i < loader.triangles.size(); i++)
         world.add(loader.triangles[i]);
@@ -31,31 +38,35 @@ int main()
     camera cam;
 
     cam.aspect_ratio = 4.0 / 3.0;
-    cam.image_width = 512;
-    cam.samples_per_pixel = 10;
-    cam.max_depth = 40;
+    cam.image_width = 200;
+    cam.samples_per_pixel = 2;
+    cam.max_depth = 5;
+
+    cam.background_color = vec3(1, 1, 1);
 
     // 高分辨率显示屏请调节此参数
-    cam.screen_scale = 2.0;
+    cam.screen_scale = 3.0;
+    cam.screen_name = "image2";
 
     cam.vfov = 20;
-    cam.lookfrom = vec3(0, 10, 10);
-    cam.lookat = vec3(0, 1, 0);
+    cam.lookfrom = vec3(7, 6, 5);
+    cam.lookat = vec3(-1, 0.5, -0.5);
     cam.vup = vec3(0, 1, 0);
 
     // cam.defocus_angle = 0.6;
     cam.defocus_angle = 0;
     cam.focus_dist = 10.0;
 
-    ScopedTimer timer("Render time: ");
 
     // create bvh tree
+    timer.start_timer("BVH time: ");
     world.create_bvh_tree(1);
+    timer.stop_timer();
 
     // rendering
+    timer.start_timer("Render time: ");
     cam.initialize();
     cam.render(world, true);
-
     timer.stop_timer();
 
     cam.screen.save("output.png");

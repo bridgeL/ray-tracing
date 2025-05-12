@@ -199,7 +199,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd C:/Users/HP/Downloads/programming/JS works/JS30 days challenge/Drums/pXh3Mlg-akatsuki-wallpaper-hd.jpg
+1map_Kd textures/cow2.png 
 
 newmtl Material.001
 Ns 616.984863
@@ -219,7 +219,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd the photo frames/starry nights.jpg
+map_Kd the_photo_frames/starry_nights.jpg
 
 newmtl Material.003
 Ns 250.000000
@@ -249,8 +249,8 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 3
-map_Kd textures/TexturesCom_Fabric_Blanket_1K_albedo.tif
-map_Bump -bm 0.400000 textures/TexturesCom_Fabric_Blanket_1K_normal.tif
+map_Kd textures/TexturesCom_Fabric_Blanket_1K_albedo.png
+map_Bump -bm 0.400000 textures/TexturesCom_Fabric_Blanket_1K_normal.png
 
 newmtl Material.007
 Ka 1.000000 1.000000 1.000000
@@ -259,7 +259,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd textures/Tiles072_1K_Color.jpg
+1map_Kd textures/cow2.png
 map_Ns textures/Tiles072_1K_Roughness.jpg
 map_Bump -bm 1.000000 textures/Tiles072_1K_Normal.jpg
 
@@ -321,9 +321,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 3
-map_Kd textures/TexturesCom_Wood_Wenge_1K_albedo.tif
-map_Ns textures/TexturesCom_Wood_Wenge_1K_roughness.tif
-map_Bump -bm 0.500000 textures/TexturesCom_Wood_Wenge_1K_normal.tif
+map_Kd textures/TexturesCom_Wood_Wenge_1K_albedo.png
+map_Ns textures/TexturesCom_Wood_Wenge_1K_roughness.png
+map_Bump -bm 0.500000 textures/TexturesCom_Wood_Wenge_1K_normal.png
 
 newmtl bed/door-material
 Ns 250.000000
@@ -334,6 +334,9 @@ Ni 1.450000
 d 1.000000
 illum 3
 map_Kd textures/WoodFloor011_1K_Color.jpg
+
+newmtl Cube.020
+map_Kd the_photo_frames/WOW.png
 
 newmtl black
 Ns 250.000000
@@ -403,9 +406,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd textures/TexturesCom_Fabric_Blanket2_1K_albedo.tif
-map_Ns textures/TexturesCom_Fabric_Blanket2_1K_roughness.tif
-map_Bump -bm 8.599999 textures/TexturesCom_Fabric_Blanket2_1K_normal.tif
+map_Kd textures/TexturesCom_Fabric_Blanket2_1K_albedo.png
+map_Ns textures/TexturesCom_Fabric_Blanket2_1K_roughness.png
+map_Bump -bm 8.599999 textures/TexturesCom_Fabric_Blanket2_1K_normal.png
 
 newmtl hidden_material
 Ns 360.000000
@@ -435,7 +438,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 0.550000
 d 1.000000
 illum 3
-map_Kd the photo frames/levi.jpg
+map_Kd the_photo_frames/levi.jpg
 
 newmtl mattress
 Ka 1.000000 1.000000 1.000000
@@ -456,7 +459,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd the photo frames/modern colored art.jpg
+map_Kd the_photo_frames/modern_colored_art.jpg
 
 newmtl orange
 Ns 250.000000
@@ -476,7 +479,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd the photo frames/persistance of time.jpg
+map_Kd the_photo_frames/persistance_of_time.jpg
 
 newmtl photo_frame
 Ns 5.557032
@@ -536,7 +539,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd the photo frames/the great wave of kanagwa.jpg
+map_Kd the_photo_frames/the_great_wave_of_kanagwa.jpg
 
 newmtl the_last_supper
 Ns 250.000000
@@ -546,7 +549,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd the photo frames/last supper.jpg
+map_Kd the_photo_frames/last_supper.jpg
 
 newmtl wall1
 Ns 250.000000
