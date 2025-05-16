@@ -124,8 +124,8 @@ private:
                        size_t start, size_t end,
                        int &best_axis, size_t &best_split_pos)
     {
-        constexpr int SAH_BUCKETS = 12;
-        constexpr float COST_TRAVERSAL = 2.0f; // 遍历左右子节点的总开销
+        constexpr int SAH_BUCKETS = 16;
+        constexpr float COST_TRAVERSAL = 1.5f; // 遍历左右子节点的总开销
         constexpr float COST_INTERSECTION = 1;
 
         struct BucketInfo

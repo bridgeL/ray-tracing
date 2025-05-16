@@ -70,13 +70,19 @@ public:
     {
         std::ostringstream oss;
         oss << "bbox[\n"
-            << "  x: " << x.toString() << "\n"
-            << "  y: " << y.toString() << "\n"
-            << "  z: " << z.toString() << "\n"
+            << "  x: " << x << "\n"
+            << "  y: " << y << "\n"
+            << "  z: " << z << "\n"
             << "]";
         return oss.str();
     }
 };
+
+std::ostream &operator<<(std::ostream &os, bbox v)
+{
+    os << v.toString();
+    return os;
+}
 
 const bbox bbox::empty = bbox(interval::empty, interval::empty, interval::empty);
 const bbox bbox::universe = bbox(interval::universe, interval::universe, interval::universe);

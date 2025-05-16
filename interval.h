@@ -58,6 +58,12 @@ public:
     }
 };
 
+std::ostream &operator<<(std::ostream &os, interval v)
+{
+    os << v.toString();
+    return os;
+}
+
 const interval interval::empty = interval(+infinity, -infinity);
 const interval interval::universe = interval(-infinity, +infinity);
 

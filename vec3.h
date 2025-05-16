@@ -101,6 +101,12 @@ public:
     }
 };
 
+std::ostream &operator<<(std::ostream &os, vec3 v)
+{
+    os << v.toString();
+    return os;
+}
+
 // Vector Utility Functions
 
 inline vec3 operator+(const vec3 &u, const vec3 &v)

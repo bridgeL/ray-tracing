@@ -29,6 +29,12 @@ public:
     }
 };
 
+std::ostream &operator<<(std::ostream &os, vertex v)
+{
+    os << v.toString();
+    return os;
+}
+
 class triangle : public hittable
 {
 public:
@@ -107,7 +113,7 @@ public:
         oss << "Triangle {\n";
         for (int i = 0; i < 3; ++i)
         {
-            oss << "  v" << i << ": " << vertices[i].toString() << "\n";
+            oss << "  v" << i << ": " << vertices[i] << "\n";
         }
         oss << "  face_normal: (" << normal.x() << ", " << normal.y() << ", " << normal.z() << ")\n"
             << "}";
@@ -193,5 +199,11 @@ private:
         return (dot1 >= 0 && dot2 >= 0 && dot3 >= 0) || (dot1 <= 0 && dot2 <= 0 && dot3 <= 0);
     }
 };
+
+std::ostream &operator<<(std::ostream &os, triangle v)
+{
+    os << v.toString();
+    return os;
+}
 
 #endif

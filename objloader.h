@@ -40,8 +40,7 @@ public:
         }
 
         // read texture
-        auto mat = make_shared<bvh_visualization_mat>(make_shared<image_texture>(texturepath));
-        // auto mat = make_shared<lambertian>(make_shared<image_texture>(texturepath));
+        auto mat = make_shared<lambertian>(make_shared<image_texture>(texturepath));
 
         // defalt values
         v_list.push_back(vec3(0, 0, 0));
@@ -174,15 +173,13 @@ public:
             {
                 double r, b, g;
                 iss >> r >> g >> b;
-                auto mat = make_shared<bvh_visualization_mat>(vec3(r, g, b));
-                // auto mat = make_shared<lambertian>(vec3(r, g, b));
+                auto mat = make_shared<lambertian>(vec3(r, g, b));
                 materials[matname] = mat; // read and put texture into map
             }
             else if ("map_Kd" == prefix)
             {
                 iss >> texturepath;
-                auto mat = make_shared<bvh_visualization_mat>(make_shared<image_texture>(textureprefix + texturepath));
-                // auto mat = make_shared<lambertian>(make_shared<image_texture>(textureprefix + texturepath));
+                auto mat = make_shared<lambertian>(make_shared<image_texture>(textureprefix + texturepath));
                 materials[matname] = mat; // read and put texture into map
             }
         }
@@ -193,8 +190,7 @@ public:
         vn_list.push_back(vec3(0, 0, 0));
         vt_u_list.push_back(0);
         vt_v_list.push_back(0);
-        materials["default"] = make_shared<bvh_visualization_mat>(vec3(0.5, 0.5, 0.5)); // default material
-        // materials["default"] = make_shared<lambertian>(vec3(0.5, 0.5, 0.5)); // default material
+        materials["default"] = make_shared<lambertian>(vec3(0.5, 0.5, 0.5)); // default material
 
         std::string current_mat = "default"; // default material
         while (std::getline(file, line))
