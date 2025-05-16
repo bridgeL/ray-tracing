@@ -13,7 +13,7 @@ public:
 
     double screen_scale = 1.0;
     std::string screen_name = "image";
-    vec3 background_color = vec3(1,1,1);
+    vec3 background_color = vec3(1, 1, 1);
 
     double vfov = 90;              // Vertical view angle (field of view)
     vec3 lookfrom = vec3(0, 0, 0); // Point camera is looking from
@@ -27,13 +27,18 @@ public:
 
     void render(const hittable_list &world, bool display)
     {
-        std::cout << "Objects number: " << world.objects.size() << std::endl;
-
         for (int j = 0; j < image_height; j++)
         {
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++)
             {
+                // 展示一条渐变色带，帮助我们分析bvh tree到底有多深，各个像素点又是位于多深的位置被命中的
+                if (j < 10)
+                {
+                    screen.set_color(i, j, convert_int_to_color(i, image_width));
+                    continue;
+                }
+
                 vec3 pixel_color(0, 0, 0);
                 for (int sample = 0; sample < samples_per_pixel; sample++)
                 {
@@ -114,7 +119,7 @@ private:
         auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u) + ((j + offset.y()) * pixel_delta_v);
 
         auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
-        auto ray_direction = pixel_sample - ray_origin;
+        auto ray_direction = (pixel_sample - ray_origin).normalized();
 
         return ray(ray_origin, ray_direction);
     }
@@ -160,9 +165,17 @@ private:
         if (!hit_anything)
             return background_color;
 
+        vec3 emit_color;
+        bool can_emit = rec.mat->emit(r, rec, emit_color);
+        if (can_emit)
+            return emit_color;
+
         ray scattered;
         vec3 attenuation;
-        if (rec.mat->scatter(r, rec, attenuation, scattered))
+
+        bool can_scatter = rec.mat->scatter(r, rec, attenuation, scattered);
+
+        if (can_scatter)
             return attenuation * ray_color(scattered, depth - 1, world);
 
         return vec3(0, 0, 0);

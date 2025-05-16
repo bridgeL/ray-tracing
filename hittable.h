@@ -15,6 +15,7 @@ public:
     double u;
     double v;
     bool front_face;
+    int depth = 0;
 
     void set_face_normal(const ray &r, const vec3 &outward_normal)
     {

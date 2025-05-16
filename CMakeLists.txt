@@ -1,23 +1,30 @@
-cmake_minimum_required(VERSION 3.10)
-project(Rasterizer)
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release) # 默认使用Release模式
-endif()
-
-message(STATUS "Build mode: ${CMAKE_BUILD_TYPE}")
-
-# 根据模式设置不同编译选项
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3 -march=native -DNDEBUG)
-    add_compile_definitions(EIGEN_NO_DEBUG)
-endif()
+cmake_minimum_required(VERSION 3.14)
+project(RayTracing)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(OpenCV REQUIRED)
-find_package(Eigen3 REQUIRED)
+macro(smart_find_package name install)
+    find_package(${name} QUIET)
+    if(NOT ${name}_FOUND)
+        message(STATUS "E: 未找到系统安装的 ${name}，请通过 ${install} 安装")
+    else()
+        message(STATUS "找到系统安装的 ${name}")
+    endif()
+endmacro()
 
-include_directories(${EIGEN3_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
+# 智能获取
+smart_find_package(OpenCV "sudo apt-get install libopencv-dev")
+smart_find_package(Eigen3 "sudo apt-get install libeigen3-dev")
+
+# 编译优化
+add_compile_options(-O3 -march=native -DNDEBUG)
+add_compile_definitions(EIGEN_NO_DEBUG)
+
+# 创建可执行文件
 add_executable(main main.cc)
-target_link_libraries(main ${OpenCV_LIBRARIES})
+
+# Eigen3 包含目录处理
+target_include_directories(main PRIVATE ${EIGEN3_INCLUDE_DIRS})
+
+# OpenCV 链接处理
+target_link_libraries(main PRIVATE ${OpenCV_LIBS})

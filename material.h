@@ -13,6 +13,11 @@ public:
     {
         return false;
     }
+
+    virtual bool emit(const ray &r_in, const hit_record &rec, vec3 &emit_color) const
+    {
+        return false;
+    }
 };
 
 class lambertian : public material
@@ -37,6 +42,23 @@ public:
 
 private:
     shared_ptr<texture> tex;
+};
+
+class bvh_visualization_mat : public material
+{
+public:
+    int h;
+
+    bvh_visualization_mat(int h) : h(h) {}
+
+    bool emit(const ray &r_in, const hit_record &rec, vec3 &emit_color)
+        const override
+    {
+        // show hit depth at bvh tree
+        // 如果画面偏红，说明bvh tree的节点深度普遍超过 h/2
+        emit_color = convert_int_to_color(rec.depth, h);
+        return true;
+    }
 };
 
 class metal : public material

@@ -47,7 +47,6 @@ inline double linear_to_gamma(double linear_component)
     return 0;
 }
 
-
 double normalizeUV(double uv)
 {
     double wrapped = std::fmod(uv, 1.0);
@@ -57,7 +56,6 @@ double normalizeUV(double uv)
 }
 
 // Common Headers
-
 #include "vec3.h"
 #include "interval.h"
 #include "ray.h"

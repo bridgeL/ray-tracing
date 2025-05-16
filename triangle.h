@@ -29,6 +29,12 @@ public:
     }
 };
 
+std::ostream &operator<<(std::ostream &os, vertex v)
+{
+    os << v.toString();
+    return os;
+}
+
 class triangle : public hittable
 {
 public:
@@ -107,7 +113,7 @@ public:
         oss << "Triangle {\n";
         for (int i = 0; i < 3; ++i)
         {
-            oss << "  v" << i << ": " << vertices[i].toString() << "\n";
+            oss << "  v" << i << ": " << vertices[i] << "\n";
         }
         oss << "  face_normal: (" << normal.x() << ", " << normal.y() << ", " << normal.z() << ")\n"
             << "}";
@@ -126,9 +132,9 @@ public:
         double zs[3] = {p0.pos.z(), p1.pos.z(), p2.pos.z()};
 
         b = bbox(
-            interval(std::min({xs[0], xs[1], xs[2]}), std::max({xs[0], xs[1], xs[2]})),
-            interval(std::min({ys[0], ys[1], ys[2]}), std::max({ys[0], ys[1], ys[2]})),
-            interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})));
+            interval(std::min({xs[0], xs[1], xs[2]}), std::max({xs[0], xs[1], xs[2]})).pad(1e-8),
+            interval(std::min({ys[0], ys[1], ys[2]}), std::max({ys[0], ys[1], ys[2]})).pad(1e-8),
+            interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})).pad(1e-8));
     }
 
     // 法向量计算
@@ -163,12 +169,12 @@ private:
         float denom = d00 * d11 - d01 * d01;
 
         // 防止除零
-        if (denom == 0.0f)
-            return vec3(-1.0f, -1.0f, -1.0f); // 或者根据你的需求返回特殊值
+        if (denom == 0.0)
+            return vec3(-1, -1, -1); // 或者根据你的需求返回特殊值
 
         float v = (d11 * d20 - d01 * d21) / denom;
         float w = (d00 * d21 - d01 * d20) / denom;
-        float u = 1.0f - v - w;
+        float u = 1 - v - w;
 
         return vec3(u, v, w);
     }
@@ -193,5 +199,11 @@ private:
         return (dot1 >= 0 && dot2 >= 0 && dot3 >= 0) || (dot1 <= 0 && dot2 <= 0 && dot3 <= 0);
     }
 };
+
+std::ostream &operator<<(std::ostream &os, triangle v)
+{
+    os << v.toString();
+    return os;
+}
 
 #endif

@@ -18,6 +18,8 @@ public:
 
     double size() const
     {
+        if (min > max)
+            return 0.0;
         return max - min;
     }
 
@@ -52,6 +54,12 @@ public:
         return "[" + std::to_string(min) + ", " + std::to_string(max) + "]";
     }
 };
+
+std::ostream &operator<<(std::ostream &os, interval v)
+{
+    os << v.toString();
+    return os;
+}
 
 const interval interval::empty = interval(+infinity, -infinity);
 const interval interval::universe = interval(-infinity, +infinity);
