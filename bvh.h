@@ -72,6 +72,7 @@ public:
         right = make_shared<BVHNode>(src_objects, split_pos, end,
                                      max_leaf_size, split_method, depth + 1);
     }
+
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
         if (!b.hit(r, ray_t))
@@ -124,33 +125,32 @@ private:
                        size_t start, size_t end,
                        int &best_axis, size_t &best_split_pos)
     {
-        constexpr int SAH_BUCKETS = 16;
-        constexpr float COST_TRAVERSAL = 1.5f; // 遍历左右子节点的总开销
+        constexpr int SAH_BUCKETS = 12;
+        constexpr float COST_TRAVERSAL = 2.0f; // 遍历左右子节点的总开销
         constexpr float COST_INTERSECTION = 1;
+        int BUCKETS_SIZE = int((end - start) / SAH_BUCKETS) + 1;
 
         struct BucketInfo
         {
             int count = 0;
-            bbox bounds;
+            bbox bounds = bbox::empty;
         };
 
         float min_cost = std::numeric_limits<float>::max();
         bool found_good_split = false;
 
-        for (int axis = 0; axis < 3; ++axis)
+        for (size_t axis = 0; axis < 3; axis++)
         {
             BucketInfo buckets[SAH_BUCKETS];
-            float axis_min = b.get(axis).min;
-            float axis_max = b.get(axis).max;
+            auto comparator = (axis == 0)   ? box_x_compare
+                              : (axis == 1) ? box_y_compare
+                                            : box_z_compare;
+            std::sort(objects.begin() + start, objects.begin() + end, comparator);
 
             // 填充桶
             for (size_t i = start; i < end; ++i)
             {
-                float centroid = objects[i]->get_bbox().get(axis).centroid();
-                float normalized = (axis_max == axis_min)
-                                       ? 0.5f
-                                       : (centroid - axis_min) / (axis_max - axis_min);
-                int bucket_idx = std::clamp((int)(normalized * SAH_BUCKETS), 0, SAH_BUCKETS - 1);
+                int bucket_idx = int((i - start) / BUCKETS_SIZE);
                 buckets[bucket_idx].count++;
                 buckets[bucket_idx].bounds = bbox(buckets[bucket_idx].bounds, objects[i]->get_bbox());
             }
@@ -158,7 +158,7 @@ private:
             // 计算每个分割位置的代价
             for (int i = 1; i < SAH_BUCKETS; ++i)
             {
-                bbox left_box, right_box;
+                bbox left_box = bbox::empty, right_box = bbox::empty;
                 int left_count = 0, right_count = 0;
 
                 // 计算左侧
@@ -180,9 +180,7 @@ private:
                 float right_area = right_box.surface_area();
                 float total_area = b.surface_area();
 
-                float cost = COST_TRAVERSAL +
-                             (left_count * left_area + right_count * right_area) /
-                                 (total_area + 1e-12) * COST_INTERSECTION;
+                float cost = COST_TRAVERSAL + (left_count * left_area + right_count * right_area) / (total_area + 1e-8) * COST_INTERSECTION;
 
                 // 更新最佳分割
                 if (cost < min_cost && left_count > 0 && right_count > 0)
@@ -196,7 +194,7 @@ private:
         }
 
         // 应用排序（仅当找到有效分割）
-        if (found_good_split && best_split_pos > start && best_split_pos < end)
+        if (found_good_split)
         {
             auto comparator = (best_axis == 0)   ? box_x_compare
                               : (best_axis == 1) ? box_y_compare

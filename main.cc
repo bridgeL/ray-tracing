@@ -8,7 +8,6 @@
 
 int main(int argc, char *argv[])
 {
-
     Config config = parse_args(argc, argv);
 
     if (config.help)
@@ -24,12 +23,13 @@ int main(int argc, char *argv[])
 
     ObjLoader loader;
 
-    timer.start_timer("Load: ");
+    std::srand(42);
+    timer.start_timer("Load");
     // loader.read_obj("model/cow.obj", "model/cow2.png");
     loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
     timer.stop_timer();
 
-    timer.start_timer("Tranformation: ");
+    timer.start_timer("Tranformation");
     loader.set_rotate(config.rotate_degree, vec3(0, 1, 0));
     // loader.set_scale(0.9);
     // loader.set_translate(0.1, 0.1, 0);
@@ -50,14 +50,14 @@ int main(int argc, char *argv[])
     camera cam;
 
     cam.aspect_ratio = 1.0 / 1.0;
-    cam.image_width = 200;
+    cam.image_width = 600;
     cam.samples_per_pixel = config.sample_num;
     cam.max_depth = config.max_depth;
 
     cam.background_color = vec3(1, 1, 1);
 
     // 高分辨率显示屏请调节此参数
-    cam.screen_scale = 3.0;
+    cam.screen_scale = 1.0;
     cam.screen_name = "image";
 
     cam.lookfrom = config.camera_lookfrom;
@@ -70,12 +70,12 @@ int main(int argc, char *argv[])
     cam.focus_dist = 10.0;
 
     // create bvh tree
-    timer.start_timer("BVH: ");
+    timer.start_timer("BVH build");
     world.create_bvh_tree(1, config.bvh_sah ? BVHSplitMethod::SAH : BVHSplitMethod::MIDDLE);
     timer.stop_timer();
 
     // rendering
-    timer.start_timer("Render: ");
+    timer.start_timer("Render");
     cam.initialize();
     cam.render(world, true);
     timer.stop_timer();

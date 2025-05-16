@@ -49,10 +49,7 @@ class bvh_visualization_mat : public material
 public:
     int h;
 
-    bvh_visualization_mat(int h) : h(h)
-    {
-        std::cout << "BVH visualization max depth: " << h << std::endl;
-    }
+    bvh_visualization_mat(int h) : h(h) {}
 
     bool emit(const ray &r_in, const hit_record &rec, vec3 &emit_color)
         const override

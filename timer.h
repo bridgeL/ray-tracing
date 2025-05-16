@@ -16,7 +16,7 @@ public:
 
     void start_timer(const std::string &msg = "")
     {
-        message = "[Timer] " + msg;
+        message = "[Timer] " + msg + ": ";
         start = std::chrono::high_resolution_clock::now();
     }
 

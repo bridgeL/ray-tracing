@@ -35,9 +35,6 @@ public:
     // 计算包围盒的表面积
     double surface_area() const
     {
-        if (x.size() == 0 || y.size() == 0 || z.size() == 0)
-            return 0.0; // 空包围盒的表面积为0
-
         double dx = x.size();
         double dy = y.size();
         double dz = z.size();
