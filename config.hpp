@@ -13,9 +13,11 @@ struct Config
   int rotate_degree = 0;            // -rd
   vec3 camera_lookfrom = {0, 1, 0}; // -c0
   vec3 camera_lookat = {-1, 1, 0};  // -c1
-  int preset_id = 0;                // -i
-  bool bvh_visual = false;          // -bvh
-  bool help = false;                // -h
+  int preset_id = -1;               // -i
+  bool bvh_visual = false;
+  bool bvh_sah = false;
+  int bvh_h = 40; // -bvh
+  bool help = false;
 };
 
 // 打印帮助信息
@@ -31,8 +33,8 @@ void print_help()
             << "  " << std::setw(8) << "-rd N" << "Set rotate degree (default: 0)\n"
             << "  " << std::setw(8) << "-c0 x y z" << "Set camera look from (default: 0 1 0)\n"
             << "  " << std::setw(8) << "-c1 x y z" << "Set camera look at (default: -1 1 0)\n"
-            << "  " << std::setw(8) << "-i N" << "Use preset configuration N\n"
-            << "  " << std::setw(8) << "-bvh" << "Enable BVH visualization\n";
+            << "  " << std::setw(8) << "-i N" << "Use preset configuration N (default: -1)\n"
+            << "  " << std::setw(8) << "-bvh <on/off> <middle/sah> <visual_depth>" << "Enable BVH visualization and set parameters\n";
 }
 
 void show_config(Config config)
@@ -45,7 +47,9 @@ void show_config(Config config)
             << "  Camera: look from: " << config.camera_lookfrom << ", look at: "
             << config.camera_lookat << "\n"
             << "  Preset: " << config.preset_id << "\n"
-            << "  BVH Visual: " << (config.bvh_visual ? "ON" : "OFF") << "\n";
+            << "  BVH Visual: " << (config.bvh_visual ? "ON " : "OFF ")
+            << (config.bvh_sah ? "SAH " : "MIDDLE ")
+            << config.bvh_h << "\n";
 }
 
 // 解析命令行参数
@@ -60,9 +64,10 @@ Config parse_args(int argc, char *argv[])
     if (arg == "-h")
     {
       config.help = true;
-      i++;
+      break;
     }
-    else if (arg == "-sa")
+
+    if (arg == "-sa")
     {
       config.sample_num = std::stoi(argv[i + 1]);
       i += 2;
@@ -105,46 +110,47 @@ Config parse_args(int argc, char *argv[])
     }
     else if (arg == "-bvh")
     {
-      config.bvh_visual = true;
-      i++;
+      config.bvh_visual = std::stoi(argv[i + 1]);
+      config.bvh_sah = std::stoi(argv[i + 2]);
+      config.bvh_h = std::stoi(argv[i + 3]);
+      i += 4;
     }
   }
 
-  if (config.bvh_visual)
+  switch (config.preset_id)
   {
+  case 0:
+    config.camera_lookfrom = vec3(0, 1, 0);
+    config.camera_lookat = vec3(-1, 1, 0);
+    config.camera_vfov = 60;
+    config.sample_num = 10;
+    config.max_depth = 20;
+    config.rotate_degree = 0;
+    break;
+
+  case 1:
+    config.camera_lookfrom = vec3(7, 6, 5);
+    config.camera_lookat = vec3(-1, 0.5, -0.5);
+    config.camera_vfov = 20;
+    config.sample_num = 10;
+    config.max_depth = 20;
+    config.rotate_degree = 0;
+    break;
+
+  case 2:
     config.camera_lookfrom = vec3(7, 6, 5);
     config.camera_lookat = vec3(-1, 0.5, -0.5);
     config.camera_vfov = 20;
     config.sample_num = 1;
     config.max_depth = 1;
     config.rotate_degree = 0;
-    config.preset_id = -1;
-  }
-  else
-  {
-    switch (config.preset_id)
-    {
-    case 0:
-      config.camera_lookfrom = vec3(0, 1, 0);
-      config.camera_lookat = vec3(-1, 1, 0);
-      config.camera_vfov = 60;
-      config.sample_num = 10;
-      config.max_depth = 20;
-      config.rotate_degree = 0;
-      break;
+    config.bvh_visual = true;
+    config.bvh_sah = true;
+    config.bvh_h = 40;
+    break;
 
-    case 1:
-      config.camera_lookfrom = vec3(7, 6, 5);
-      config.camera_lookat = vec3(-1, 0.5, -0.5);
-      config.camera_vfov = 20;
-      config.sample_num = 10;
-      config.max_depth = 20;
-      config.rotate_degree = 0;
-      break;
-
-    default:
-      break;
-    }
+  default:
+    break;
   }
 
   return config;

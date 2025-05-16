@@ -16,9 +16,22 @@ public:
         return orig + t * dir;
     }
 
+    std::string toString() const
+    {
+        std::ostringstream oss;
+        oss << "ray(origin: " << orig << ", dir: " << dir << ")";
+        return oss.str();
+    }
+
 private:
     vec3 orig;
     vec3 dir;
 };
+
+std::ostream &operator<<(std::ostream &os, ray v)
+{
+    os << v.toString();
+    return os;
+}
 
 #endif

@@ -24,29 +24,26 @@ int main(int argc, char *argv[])
 
     ObjLoader loader;
 
-    // timer.start_timer("Load: ");
+    timer.start_timer("Load: ");
     // loader.read_obj("model/cow.obj", "model/cow2.png");
-    // // loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
-    // timer.stop_timer();
+    loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
+    timer.stop_timer();
 
-    // timer.start_timer("Tranformation: ");
-    // loader.set_rotate(config.rotate_degree, vec3(0, 1, 0));
-    // // loader.set_scale(0.9);
-    // // loader.set_translate(0.1, 0.1, 0);
-    // loader.apply_transformation();
+    timer.start_timer("Tranformation: ");
+    loader.set_rotate(config.rotate_degree, vec3(0, 1, 0));
+    // loader.set_scale(0.9);
+    // loader.set_translate(0.1, 0.1, 0);
+    loader.apply_transformation();
 
-    // timer.stop_timer();
+    timer.stop_timer();
 
-    // auto mat = make_shared<bvh_visualization_mat>();
-    // for (size_t i = 0; i < loader.triangles.size(); i++)
-    // {
-    //     if (config.bvh_visual)
-    //         loader.triangles[i]->mat = mat;
-    //     world.add(loader.triangles[i]);
-    // }
-
-    world.add(make_shared<sphere>(vec3(0, 0, 0), 1, make_shared<lambertian>(vec3(1, 0, 1))));
-    // world.add(make_shared<sphere>(vec3(0, 0, 0), 1, make_shared<bvh_visualization_mat>(40)));
+    auto mat = make_shared<bvh_visualization_mat>(config.bvh_h);
+    for (size_t i = 0; i < loader.triangles.size(); i++)
+    {
+        if (config.bvh_visual)
+            loader.triangles[i]->mat = mat;
+        world.add(loader.triangles[i]);
+    }
 
     std::cout << "Objects number: " << world.objects.size() << std::endl;
 
@@ -60,9 +57,11 @@ int main(int argc, char *argv[])
     cam.background_color = vec3(1, 1, 1);
 
     // 高分辨率显示屏请调节此参数
-    cam.screen_scale = 1.0;
+    cam.screen_scale = 3.0;
     cam.screen_name = "image";
 
+    cam.lookfrom = config.camera_lookfrom;
+    cam.lookat = config.camera_lookat;
     cam.vfov = config.camera_vfov;
     cam.vup = vec3(0, 1, 0);
 
@@ -72,7 +71,7 @@ int main(int argc, char *argv[])
 
     // create bvh tree
     timer.start_timer("BVH: ");
-    world.create_bvh_tree(1, BVHSplitMethod::MIDDLE);
+    world.create_bvh_tree(1, config.bvh_sah ? BVHSplitMethod::SAH : BVHSplitMethod::MIDDLE);
     timer.stop_timer();
 
     // rendering
