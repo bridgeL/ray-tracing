@@ -57,7 +57,7 @@ void show_config(Config config)
               << "        Look from: " << config.camera_lookfrom << "\n"
               << "        Look at: " << config.camera_lookat << "\n"
               << "    Preset: " << config.preset_id << "\n"
-              << "    BVH SAH: " << (config.bvh_sah ? "ON " : "OFF ") << "\n"
+              << "    BVH: " << (config.bvh_sah ? "SAH " : "MIDDLE ") << "\n"
               << "    BVH Depth Visual: " << (config.bvh_depth_visual ? "ON " : "OFF ") << config.bvh_depth_visual_h << "\n"
               << "    BVH Group Visual: " << (config.bvh_group_visual ? "ON " : "OFF ") << config.bvh_group_visual_h << " \"" << config.bvh_group_visual_root << "\"\n"
               << "    Continuous input: " << (config.ci ? "ON " : "OFF ") << "\n";
