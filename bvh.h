@@ -24,13 +24,14 @@ public:
     shared_ptr<BVHNode> right;
     std::vector<shared_ptr<hittable>> objects; // 中间节点不存值，只有叶子节点会存
     int depth;
+    std::string path;
 
     // 递归构建函数
     BVHNode(std::vector<shared_ptr<hittable>> &src_objects,
             size_t start, size_t end,
             int max_leaf_size,
             BVHSplitMethod split_method = BVHSplitMethod::SAH, // 默认使用SAH
-            int depth = 0) : depth(depth)
+            int depth = 0, std::string path = "") : depth(depth), path(path)
     {
         // 1. 计算当前节点包围盒
         b = bbox::empty;
@@ -68,9 +69,11 @@ public:
         // 4. 递归构建子节点（保持相同的分割策略）
         type = BVHNodeType::INTERNAL;
         left = make_shared<BVHNode>(src_objects, start, split_pos,
-                                    max_leaf_size, split_method, depth + 1);
+                                    max_leaf_size, split_method,
+                                    depth + 1, path + "0");
         right = make_shared<BVHNode>(src_objects, split_pos, end,
-                                     max_leaf_size, split_method, depth + 1);
+                                     max_leaf_size, split_method,
+                                     depth + 1, path + "1");
     }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
@@ -87,9 +90,8 @@ public:
                 {
                     hit_anything = true;
                     ray_t.max = rec.t;
-
-                    // 记录bvh深度
-                    rec.depth = depth;
+                    rec.bvh_depth = depth;
+                    rec.bvh_path = path;
                 }
             }
             return hit_anything;
@@ -224,17 +226,5 @@ private:
         return a->get_bbox().z.min < b->get_bbox().z.min;
     }
 };
-
-vec3 convert_int_to_color(int i, int n)
-{
-    float phase = interval(0, n).clamp(i) * 4 / n;
-    if (phase <= 1)
-        return vec3(0, phase * 1, 1); // 阶段1: 蓝 → 青
-    if (phase <= 2)
-        return vec3(0, 1, (2 - phase) * 1); // 阶段2: 青 → 绿
-    if (phase <= 3)
-        return vec3((phase - 2) * 1, 1, 0); // 阶段3: 绿 → 黄
-    return vec3(1, (4 - phase) * 1, 0);     // 阶段4: 黄 → 红
-}
 
 #endif

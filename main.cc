@@ -15,7 +15,8 @@ int main(int argc, char *argv[])
     std::cout << "OpenMP not available\n";
 #endif
 
-    Config config = parse_args(argc, argv);
+    Config config;
+    parse_args(config, argc, argv, 1);
 
     if (config.help)
     {
@@ -41,16 +42,23 @@ int main(int argc, char *argv[])
     // loader.set_scale(0.9);
     // loader.set_translate(0.1, 0.1, 0);
     loader.apply_transformation();
-
     timer.stop_timer();
 
-    auto mat = make_shared<bvh_visualization_mat>(config.bvh_h);
-    for (size_t i = 0; i < loader.triangles.size(); i++)
+    if (config.bvh_depth_visual)
     {
-        if (config.bvh_visual)
+        auto mat = make_shared<bvh_depth_visual_mat>(config.bvh_depth_visual_h);
+        for (size_t i = 0; i < loader.triangles.size(); i++)
             loader.triangles[i]->mat = mat;
-        world.add(loader.triangles[i]);
     }
+    else if (config.bvh_group_visual)
+    {
+        auto mat = make_shared<bvh_group_visual_mat>(config.bvh_group_visual_h, config.bvh_group_visual_root);
+        for (size_t i = 0; i < loader.triangles.size(); i++)
+            loader.triangles[i]->mat = mat;
+    }
+
+    for (size_t i = 0; i < loader.triangles.size(); i++)
+        world.add(loader.triangles[i]);
 
     std::cout << "Objects number: " << world.objects.size() << std::endl;
 
@@ -78,7 +86,7 @@ int main(int argc, char *argv[])
 
     // create bvh tree
     timer.start_timer("BVH build");
-    world.create_bvh_tree(1, config.bvh_sah ? BVHSplitMethod::SAH : BVHSplitMethod::MIDDLE);
+    world.create_bvh_tree(5, config.bvh_sah ? BVHSplitMethod::SAH : BVHSplitMethod::MIDDLE);
     timer.stop_timer();
 
     // rendering
@@ -86,6 +94,34 @@ int main(int argc, char *argv[])
     cam.initialize();
     cam.render(world, true, config.use_openmp);
     timer.stop_timer();
+
+    while (config.ci)
+    {
+        parse_cin_input(config);
+        show_config(config);
+
+        if (config.bvh_depth_visual)
+        {
+            auto mat = make_shared<bvh_depth_visual_mat>(config.bvh_depth_visual_h);
+            for (size_t i = 0; i < loader.triangles.size(); i++)
+                loader.triangles[i]->mat = mat;
+        }
+        else if (config.bvh_group_visual)
+        {
+            auto mat = make_shared<bvh_group_visual_mat>(config.bvh_group_visual_h, config.bvh_group_visual_root);
+            for (size_t i = 0; i < loader.triangles.size(); i++)
+                loader.triangles[i]->mat = mat;
+        }
+
+        cam.samples_per_pixel = config.sample_num;
+        cam.max_depth = config.max_depth;
+        cam.lookfrom = config.camera_lookfrom;
+        cam.lookat = config.camera_lookat;
+        cam.vfov = config.camera_vfov;
+
+        cam.initialize();
+        cam.render(world, true, config.use_openmp);
+    }
 
     cam.screen.save("output.png");
     cam.screen.display(0);
