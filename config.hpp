@@ -7,16 +7,20 @@
 // 配置结构体
 struct Config
 {
-    int camera_vfov = 20;                     // -v
-    int max_depth = 20;                       // -d
-    int sample_num = 10;                      // -sa
-    int rotate_degree = 0;                    // -rd
-    vec3 camera_lookfrom = vec3(7, 6, 5);     // -c0
-    vec3 camera_lookat = vec3(-1, 0.5, -0.5); // -c1
-    int preset_id = -1;                       // -i
-    bool bvh_visual = false;                  // -bv
-    bool use_openmp = false;                  // -mp
-    int bvh_h = 20;
+    int camera_vfov = 20;                   // -v
+    int max_depth = 20;                     // -d
+    int sample_num = 10;                    // -sa
+    int rotate_degree = 0;                  // -rd
+    vec3 camera_lookfrom = {1, 1, 1};       // -c0
+    vec3 camera_lookat = {0, 0, 0};         // -c1
+    int preset_id = -1;                     // -i
+    bool bvh_depth_visual = false;          // -bvd
+    int bvh_depth_visual_h = 20;            //
+    bool bvh_group_visual = false;          // -bvg
+    std::string bvh_group_visual_root = ""; //
+    int bvh_group_visual_h = 20;            //
+    bool use_openmp = true;                 // -mp
+    bool ci = false;                        // -ci
     bool bvh_sah = true;
     bool help = false;
 };
@@ -35,32 +39,34 @@ void print_help()
               << "  " << std::setw(8) << "-c0 x y z" << "Set camera look from (default: 0 1 0)\n"
               << "  " << std::setw(8) << "-c1 x y z" << "Set camera look at (default: -1 1 0)\n"
               << "  " << std::setw(8) << "-i N" << "Use preset configuration N (default: -1)\n"
-              << "  " << std::setw(8) << "-bv N" << "Enable BVH visualization and set visual depth\n"
-              << "  " << std::setw(8) << "-sah" << "Enable BVH SAH algorithm\n"
-              << "  " << std::setw(8) << "-mp" << "Enable OpenMP\n";
+              << "  " << std::setw(8) << "-bvd N" << "Enable BVH depth visualization and set depth\n"
+              << "  " << std::setw(8) << "-bvg <str> N" << "Enable BVH group visualization and set root and depth\n"
+              << "  " << std::setw(8) << "-sah 0" << "Disable BVH SAH algorithm\n"
+              << "  " << std::setw(8) << "-mp 0" << "Disable OpenMP\n"
+              << "  " << std::setw(8) << "-ci" << "Enable continuous input\n";
 }
 
 void show_config(Config config)
 {
     // 使用配置参数
     std::cout << "Current configuration:\n"
-              << "  Depth: " << config.max_depth << "\n"
-              << "  Samples: " << config.sample_num << "\n"
-              << "  Rotation: " << config.rotate_degree << " degrees\n"
-              << "  Camera: look from: " << config.camera_lookfrom << ", look at: "
-              << config.camera_lookat << "\n"
-              << "  Preset: " << config.preset_id << "\n"
-              << "  BVH SAH: " << (config.bvh_sah ? "ON " : "OFF ") << "\n"
-              << "  BVH Visual: " << (config.bvh_visual ? "ON " : "OFF ")
-              << config.bvh_h << "\n";
+              << "    Depth: " << config.max_depth << "\n"
+              << "    Samples: " << config.sample_num << "\n"
+              << "    Rotation: " << config.rotate_degree << " degrees\n"
+              << "    Camera: " << "\n"
+              << "        Look from: " << config.camera_lookfrom << "\n"
+              << "        Look at: " << config.camera_lookat << "\n"
+              << "    Preset: " << config.preset_id << "\n"
+              << "    BVH SAH: " << (config.bvh_sah ? "ON " : "OFF ") << "\n"
+              << "    BVH Depth Visual: " << (config.bvh_depth_visual ? "ON " : "OFF ") << config.bvh_depth_visual_h << "\n"
+              << "    BVH Group Visual: " << (config.bvh_group_visual ? "ON " : "OFF ") << config.bvh_group_visual_h << " \"" << config.bvh_group_visual_root << "\"\n"
+              << "    Continuous input: " << (config.ci ? "ON " : "OFF ") << "\n";
 }
 
 // 解析命令行参数
-Config parse_args(int argc, char *argv[])
+void parse_args(Config &config, int argc, char *argv[], int start)
 {
-    Config config;
-
-    for (int i = 1; i < argc;)
+    for (int i = start; i < argc;)
     {
         std::string arg = argv[i];
 
@@ -75,6 +81,30 @@ Config parse_args(int argc, char *argv[])
             config.sample_num = std::stoi(argv[i + 1]);
             i += 2;
         }
+        else if (arg == "-ci")
+        {
+            config.ci = true;
+            i++;
+        }
+
+        // ci
+        else if (arg == "0" && config.ci && config.bvh_group_visual)
+        {
+            config.bvh_group_visual_root += "0";
+            i++;
+        }
+        else if (arg == "1" && config.ci && config.bvh_group_visual)
+        {
+            config.bvh_group_visual_root += "1";
+            i++;
+        }
+        else if (arg == "2" && config.ci && config.bvh_group_visual)
+        {
+            config.bvh_group_visual_root = config.bvh_group_visual_root.substr(0, config.bvh_group_visual_root.length() - 1);
+            i++;
+        }
+
+        // vfov
         else if (arg == "-v")
         {
             config.camera_vfov = std::stoi(argv[i + 1]);
@@ -82,8 +112,8 @@ Config parse_args(int argc, char *argv[])
         }
         else if (arg == "-mp")
         {
-            config.use_openmp = true;
-            i++;
+            config.use_openmp = std::stoi(argv[i + 1]);
+            i += 2;
         }
         else if (arg == "-d")
         {
@@ -124,83 +154,103 @@ Config parse_args(int argc, char *argv[])
                 config.camera_lookfrom = vec3(0, 1, 0);
                 config.camera_lookat = vec3(-1, 1, 0);
                 config.camera_vfov = 60;
-                config.sample_num = 10;
-                config.max_depth = 20;
-                config.rotate_degree = 0;
-                config.bvh_sah = true;
-                config.bvh_visual = false;
                 break;
 
             // overall middle
-            case 2:
-                std::cout << "Based on Preset 2: overall bvh-middle" << std::endl;
+            case 1:
+                std::cout << "Based on Preset 1: overall bvh-middle" << std::endl;
                 config.camera_lookfrom = vec3(7, 6, 5);
                 config.camera_lookat = vec3(-1, 0.5, -0.5);
                 config.camera_vfov = 20;
-                config.sample_num = 10;
-                config.max_depth = 20;
-                config.rotate_degree = 0;
                 config.bvh_sah = false;
-                config.bvh_visual = false;
                 break;
 
             // overall sah
-            case 3:
-                std::cout << "Based on Preset 3: overall bvh-sah" << std::endl;
+            case 2:
+                std::cout << "Based on Preset 2: overall bvh-sah" << std::endl;
                 config.camera_lookfrom = vec3(7, 6, 5);
                 config.camera_lookat = vec3(-1, 0.5, -0.5);
                 config.camera_vfov = 20;
-                config.sample_num = 10;
-                config.max_depth = 20;
-                config.rotate_degree = 0;
-                config.bvh_sah = true;
-                config.bvh_visual = false;
+                break;
+
+            case 10:
+                std::cout << "Based on Preset 10: bvh visual local area bvh-sah" << std::endl;
+                config.camera_lookfrom = vec3(0, 1, 0);
+                config.camera_lookat = vec3(-1, 1, 0);
+                config.camera_vfov = 60;
+                config.sample_num = 50;
                 break;
 
             // bvh visual middle
-            case 12:
-                std::cout << "Based on Preset 12: bvh visual bvh-middle" << std::endl;
+            case 11:
+                std::cout << "Based on Preset 11: bvh visual bvh-middle" << std::endl;
                 config.camera_lookfrom = vec3(7, 6, 5);
                 config.camera_lookat = vec3(-1, 0.5, -0.5);
                 config.camera_vfov = 20;
-                config.sample_num = 1;
-                config.max_depth = 1;
-                config.rotate_degree = 0;
-                config.bvh_visual = true;
+                config.sample_num = 50;
                 config.bvh_sah = false;
-                config.bvh_h = 20;
                 break;
 
             // bvh visual sah
-            case 13:
-                std::cout << "Based on Preset 13: bvh visual bvh-sah" << std::endl;
+            case 12:
+                std::cout << "Based on Preset 12: bvh visual bvh-sah" << std::endl;
                 config.camera_lookfrom = vec3(7, 6, 5);
                 config.camera_lookat = vec3(-1, 0.5, -0.5);
                 config.camera_vfov = 20;
-                config.sample_num = 1;
-                config.max_depth = 1;
-                config.rotate_degree = 0;
-                config.bvh_visual = true;
-                config.bvh_sah = true;
-                config.bvh_h = 20;
+                config.sample_num = 50;
                 break;
 
             default:
                 break;
             }
         }
-        else if (arg == "-bv")
+        else if (arg == "-bvd")
         {
-            config.bvh_visual = true;
-            config.bvh_h = std::stoi(argv[i + 1]);
+            config.bvh_depth_visual = true;
+            config.bvh_group_visual = false;
+            config.bvh_depth_visual_h = std::stoi(argv[i + 1]);
             i += 2;
+        }
+        else if (arg == "-bvg")
+        {
+            config.bvh_group_visual = true;
+            config.bvh_depth_visual = false;
+            config.bvh_group_visual_h = std::stoi(argv[i + 1]);
+            std::string s = argv[i + 2];
+            config.bvh_group_visual_root = s == "." ? "" : s;
+            i += 3;
         }
         else if (arg == "-sah")
         {
-            config.bvh_sah = true;
-            i++;
+            config.bvh_sah = std::stoi(argv[i + 1]);
+            i += 2;
+        }
+        else
+        {
+            std::cout << "E: Unexpected Input: " << arg << std::endl;
+            break;
         }
     }
+}
 
-    return config;
+// 将 cin 输入拆分为 argv 格式
+void parse_cin_input(Config &config)
+{
+    std::string line;
+    std::getline(std::cin, line); // 读取整行输入
+
+    // 拆分输入为单词（类似命令行参数）
+    std::vector<std::string> tokens;
+    std::istringstream iss(line);
+    std::string token;
+    while (iss >> token)
+        tokens.push_back(token);
+
+    // 转换为 argc 和 argv 格式
+    std::vector<char *> argv;
+    for (auto &token : tokens)
+        argv.push_back(const_cast<char *>(token.c_str()));
+
+    // 调用 parse_args
+    parse_args(config, argv.size(), argv.data(), 0);
 }

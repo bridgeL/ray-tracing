@@ -15,7 +15,10 @@ public:
     double u;
     double v;
     bool front_face;
-    int depth = 0;
+
+    // bvh visual
+    int bvh_depth = 0;
+    std::string bvh_path = "";
 
     void set_face_normal(const ray &r, const vec3 &outward_normal)
     {
