@@ -3,6 +3,9 @@
 ## Project Overview
 
 ![img](doc/1.png)
+![img](doc/2.png)
+![img](doc/3.png)
+![img](doc/4.png)
 
 Our goal is to implement an optimized ray tracer based on **Ray Tracing in One Weekend** framework [^rtweekend], with:
 
@@ -21,6 +24,7 @@ Our goal is to implement an optimized ray tracer based on **Ray Tracing in One W
 ```
 sudo apt install -y cmake g++ gdb
 sudo apt install libopencv-dev
+sudo apt install libeigen3-dev
 ```
 
 ## How to run
@@ -29,7 +33,7 @@ sudo apt install libopencv-dev
 mkdir build
 cd build
 cmake .. 
-make && ./main
+make && ./main -i 2
 ```
 
 ## Technical Approach
