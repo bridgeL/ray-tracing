@@ -25,8 +25,10 @@ public:
 
     Screen screen;
 
-    void render(const hittable_list &world, bool display)
+    void render(const hittable_list &world, bool display, bool use_openmp)
     {
+
+#pragma omp parallel for schedule(dynamic) if (use_openmp)
         for (int j = 0; j < image_height; j++)
         {
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;

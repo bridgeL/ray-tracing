@@ -8,6 +8,13 @@
 
 int main(int argc, char *argv[])
 {
+// 检查 OpenMP 是否可用
+#ifdef _OPENMP
+    std::cout << "OpenMP enabled (max threads: " << omp_get_max_threads() << ")\n";
+#else
+    std::cout << "OpenMP not available\n";
+#endif
+
     Config config = parse_args(argc, argv);
 
     if (config.help)
@@ -50,7 +57,7 @@ int main(int argc, char *argv[])
     camera cam;
 
     cam.aspect_ratio = 1.0 / 1.0;
-    cam.image_width = 600;
+    cam.image_width = 1000;
     cam.samples_per_pixel = config.sample_num;
     cam.max_depth = config.max_depth;
 
@@ -77,7 +84,7 @@ int main(int argc, char *argv[])
     // rendering
     timer.start_timer("Render");
     cam.initialize();
-    cam.render(world, true);
+    cam.render(world, true, config.use_openmp);
     timer.stop_timer();
 
     cam.screen.save("output.png");
