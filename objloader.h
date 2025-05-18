@@ -184,6 +184,15 @@ public:
             }
         }
 
+        // 自定义一个特殊的material： Material.magic
+        materials["Material.magic"] = make_shared<magic_mat>(
+            vec3(7, 6, 5),
+            vec3(-1, 0.5, -0.9),
+            vec3(0, 1, 0),
+            10, 10, 800, 600);
+
+        materials["laptop.white"] = make_shared<metal>(vec3(1, 1, 1), 0.6);
+
         // read obj file
         // defalt values
         v_list.push_back(vec3(0, 0, 0));
@@ -381,8 +390,8 @@ private:
         float nz = norm_vector.z(); // x, y, z value of the normalized axis
 
         float rad = rotation_angle * 3.1415 / 180.0; // convert the angle from degree to radian
-        float cos = std::cos(rad);                    // cos(theta)
-        float sin = std::sin(rad);                    // sin(theta)
+        float cos = std::cos(rad);                   // cos(theta)
+        float sin = std::sin(rad);                   // sin(theta)
         float omc = 1.0 - cos;                       // 1 - cos(theta)
 
         // put rotation parameters into the matrix
