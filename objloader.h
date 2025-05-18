@@ -191,7 +191,7 @@ public:
             vec3(0, 1, 0),
             10, 10, 800, 600);
 
-        materials["laptop.white"] = make_shared<metal>(vec3(1, 1, 1), 0.6);
+        materials["laptop.white"] = make_shared<metal>(vec3(1, 1, 1), 0.8);
 
         // read obj file
         // defalt values

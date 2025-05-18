@@ -27,8 +27,10 @@ int main(int argc, char *argv[])
     ScopedTimer timer;
     hittable_list world;
 
-    world.add(make_shared<sphere>(vec3(-1.2, 0.69, -0.9), 0.02, make_shared<metal>(vec3(1, 0.2, 0.2), 0.3)));
     world.add(make_shared<sphere>(vec3(-1.2, 0.9, -1), 0.2, make_shared<glass>(1.5)));
+    world.add(make_shared<sphere>(vec3(-1.1, 0.637, -0.8), 0.01, make_shared<metal>(vec3(1, 0.2, 0.2), 0.3)));
+    world.add(make_shared<sphere>(vec3(-1.1, 0.637, -0.7), 0.01, make_shared<metal>(vec3(0.2, 0.2, 1), 0.3)));
+    world.add(make_shared<sphere>(vec3(-1.15, 0.637, -0.6), 0.01, make_shared<metal>(vec3(0.2, 0.2, 0.2), 0.3)));
     world.add(make_shared<sphere>(vec3(-1.2, 0.7, -0.6), 0.03, make_shared<light_mat>(vec3(1, 1, 1), 20)));
     world.add(make_shared<sphere>(vec3(0.196, 0.6, -1.39), 0.03, make_shared<light_mat>(vec3(1, 1, 1), 40)));
 
@@ -50,12 +52,10 @@ int main(int argc, char *argv[])
     for (size_t i = 0; i < loader.triangles.size(); i++)
         world.add(loader.triangles[i]);
 
-    std::cout << "Objects number: " << world.objects.size() << std::endl;
-
     camera cam;
 
-    cam.aspect_ratio = 16.0 / 9.0;
-    cam.image_width = 1120;
+    cam.image_width = 900;
+    cam.image_height = 520;
     cam.samples_per_pixel = config.sample_num;
     cam.max_depth = config.max_depth;
 
@@ -83,6 +83,8 @@ int main(int argc, char *argv[])
         cam.mat = nullptr;
 
     show_config(config);
+    std::cout << "Objects number: " << world.objects.size() << std::endl;
+    std::cout << "image size: " << cam.image_width << 'x' << cam.image_height << std::endl;
 
     // create bvh tree
     bool sah = config.bvh_sah;
@@ -103,6 +105,8 @@ int main(int argc, char *argv[])
     {
         parse_cin_input(config);
         show_config(config);
+        std::cout << "Objects number: " << world.objects.size() << std::endl;
+        std::cout << "image size: " << cam.image_width << 'x' << cam.image_height << std::endl;
 
         if (config.bvh_depth_visual)
             cam.mat = make_shared<bvh_depth_visual_mat>(config.bvh_depth_visual_h);
