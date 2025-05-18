@@ -190,8 +190,13 @@ public:
             vec3(-1, 0.5, -0.9),
             vec3(0, 1, 0),
             10, 10, 800, 600);
+        // materials["Material.magic"] = make_shared<magic_mat>(
+        //     vec3(-0.45, 1, -0.3),
+        //     vec3(-0.8, 0.9, -0.38),
+        //     vec3(0, 1, 0),
+        //     30, 10, 800, 600);
 
-        materials["laptop.white"] = make_shared<metal>(vec3(1, 1, 1), 0.8);
+        materials["laptop"] = make_shared<metal>(vec3(0.1, 0.1, 0.1), 0.8);
 
         // read obj file
         // defalt values
