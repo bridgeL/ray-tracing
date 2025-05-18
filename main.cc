@@ -24,10 +24,13 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    show_config(config);
-
     ScopedTimer timer;
     hittable_list world;
+
+    world.add(make_shared<sphere>(vec3(-1.2, 0.69, -0.9), 0.02, make_shared<metal>(vec3(1, 0.2, 0.2), 0.3)));
+    world.add(make_shared<sphere>(vec3(-1.2, 0.9, -1), 0.2, make_shared<glass>(1.5)));
+    world.add(make_shared<sphere>(vec3(-1.2, 0.7, -0.6), 0.03, make_shared<light_mat>(vec3(1, 1, 1), 20)));
+    world.add(make_shared<sphere>(vec3(0.196, 0.6, -1.39), 0.03, make_shared<light_mat>(vec3(1, 1, 1), 40)));
 
     ObjLoader loader;
 
@@ -44,19 +47,6 @@ int main(int argc, char *argv[])
     loader.apply_transformation();
     timer.stop_timer();
 
-    if (config.bvh_depth_visual)
-    {
-        auto mat = make_shared<bvh_depth_visual_mat>(config.bvh_depth_visual_h);
-        for (size_t i = 0; i < loader.triangles.size(); i++)
-            loader.triangles[i]->mat = mat;
-    }
-    else if (config.bvh_group_visual)
-    {
-        auto mat = make_shared<bvh_group_visual_mat>(config.bvh_group_visual_h, config.bvh_group_visual_root);
-        for (size_t i = 0; i < loader.triangles.size(); i++)
-            loader.triangles[i]->mat = mat;
-    }
-
     for (size_t i = 0; i < loader.triangles.size(); i++)
         world.add(loader.triangles[i]);
 
@@ -64,11 +54,12 @@ int main(int argc, char *argv[])
 
     camera cam;
 
-    cam.aspect_ratio = 1.0 / 1.0;
-    cam.image_width = 1000;
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width = 1120;
     cam.samples_per_pixel = config.sample_num;
     cam.max_depth = config.max_depth;
 
+    // 黑色背景
     cam.background_color = vec3(1, 1, 1);
 
     // 高分辨率显示屏请调节此参数
@@ -84,9 +75,19 @@ int main(int argc, char *argv[])
     cam.defocus_angle = 0;
     cam.focus_dist = 10.0;
 
+    if (config.bvh_depth_visual)
+        cam.mat = make_shared<bvh_depth_visual_mat>(config.bvh_depth_visual_h);
+    else if (config.bvh_group_visual)
+        cam.mat = make_shared<bvh_group_visual_mat>(config.bvh_group_visual_h, config.bvh_group_visual_root);
+    else
+        cam.mat = nullptr;
+
+    show_config(config);
+
     // create bvh tree
+    bool sah = config.bvh_sah;
     timer.start_timer("BVH build");
-    world.create_bvh_tree(5, config.bvh_sah ? BVHSplitMethod::SAH : BVHSplitMethod::MIDDLE);
+    world.create_bvh_tree(5, sah ? BVHSplitMethod::SAH : BVHSplitMethod::MIDDLE);
     timer.stop_timer();
 
     // rendering
@@ -95,23 +96,20 @@ int main(int argc, char *argv[])
     cam.render(world, true, config.use_openmp);
     timer.stop_timer();
 
+    cam.screen.save("output.png");
+    cam.screen.display(1);
+
     while (config.ci)
     {
         parse_cin_input(config);
         show_config(config);
 
         if (config.bvh_depth_visual)
-        {
-            auto mat = make_shared<bvh_depth_visual_mat>(config.bvh_depth_visual_h);
-            for (size_t i = 0; i < loader.triangles.size(); i++)
-                loader.triangles[i]->mat = mat;
-        }
+            cam.mat = make_shared<bvh_depth_visual_mat>(config.bvh_depth_visual_h);
         else if (config.bvh_group_visual)
-        {
-            auto mat = make_shared<bvh_group_visual_mat>(config.bvh_group_visual_h, config.bvh_group_visual_root);
-            for (size_t i = 0; i < loader.triangles.size(); i++)
-                loader.triangles[i]->mat = mat;
-        }
+            cam.mat = make_shared<bvh_group_visual_mat>(config.bvh_group_visual_h, config.bvh_group_visual_root);
+        else
+            cam.mat = nullptr;
 
         cam.samples_per_pixel = config.sample_num;
         cam.max_depth = config.max_depth;
@@ -119,10 +117,20 @@ int main(int argc, char *argv[])
         cam.lookat = config.camera_lookat;
         cam.vfov = config.camera_vfov;
 
+        if (config.bvh_sah != sah)
+        {
+            sah = config.bvh_sah;
+            timer.start_timer("BVH build");
+            world.create_bvh_tree(5, sah ? BVHSplitMethod::SAH : BVHSplitMethod::MIDDLE);
+            timer.stop_timer();
+        }
+
+        timer.start_timer("Render");
         cam.initialize();
         cam.render(world, true, config.use_openmp);
-    }
+        timer.stop_timer();
 
-    cam.screen.save("output.png");
-    cam.screen.display(0);
+        cam.screen.save("output.png");
+        cam.screen.display(1);
+    }
 }

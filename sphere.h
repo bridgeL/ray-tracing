@@ -6,6 +6,8 @@
 class sphere : public hittable
 {
 public:
+    shared_ptr<material> mat;
+
     sphere(const vec3 &center, double radius, shared_ptr<material> mat)
         : center(center), radius(std::fmax(0, radius)), mat(mat)
     {
@@ -59,7 +61,6 @@ public:
 private:
     vec3 center;
     double radius;
-    shared_ptr<material> mat;
     bbox b;
 };
 

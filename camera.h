@@ -23,6 +23,8 @@ public:
     double defocus_angle = 0; // Variation angle of rays through each pixel
     double focus_dist = 10;   // Distance from camera lookfrom point to plane of perfect focus
 
+    shared_ptr<material> mat = nullptr;
+
     Screen screen;
 
     void render(const hittable_list &world, bool display, bool use_openmp)
@@ -167,15 +169,18 @@ private:
         if (!hit_anything)
             return background_color;
 
+        auto m = mat;
+        if (mat == nullptr)
+            m = rec.mat;
+
         vec3 emit_color;
-        bool can_emit = rec.mat->emit(r, rec, emit_color);
+        bool can_emit = m->emit(r, rec, emit_color);
         if (can_emit)
             return emit_color;
 
         ray scattered;
         vec3 attenuation;
-
-        bool can_scatter = rec.mat->scatter(r, rec, attenuation, scattered);
+        bool can_scatter = m->scatter(r, rec, attenuation, scattered);
 
         if (can_scatter)
             return attenuation * ray_color(scattered, depth - 1, world);

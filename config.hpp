@@ -8,7 +8,7 @@
 struct Config
 {
     int camera_vfov = 20;                   // -v
-    int max_depth = 20;                     // -d
+    int max_depth = 40;                     // -d
     int sample_num = 10;                    // -sa
     int rotate_degree = 0;                  // -rd
     vec3 camera_lookfrom = {1, 1, 1};       // -c0
@@ -56,7 +56,9 @@ void show_config(Config config)
               << "    Camera: " << "\n"
               << "        Look from: " << config.camera_lookfrom << "\n"
               << "        Look at: " << config.camera_lookat << "\n"
+              << "        vFov: " << config.camera_vfov << "\n"
               << "    Preset: " << config.preset_id << "\n"
+              << "    OpenMP: " << (config.use_openmp ? "ON " : "OFF ") << "\n"
               << "    BVH: " << (config.bvh_sah ? "SAH " : "MIDDLE ") << "\n"
               << "    BVH Depth Visual: " << (config.bvh_depth_visual ? "ON " : "OFF ") << config.bvh_depth_visual_h << "\n"
               << "    BVH Group Visual: " << (config.bvh_group_visual ? "ON " : "OFF ") << config.bvh_group_visual_h << " \"" << config.bvh_group_visual_root << "\"\n"
@@ -173,6 +175,13 @@ void parse_args(Config &config, int argc, char *argv[], int start)
                 config.camera_vfov = 20;
                 break;
 
+            case 3:
+                std::cout << "Based on Preset 3: laptop" << std::endl;
+                config.camera_lookfrom = vec3(-0.45, 1, -0.3);
+                config.camera_lookat = vec3(-0.8, 0.9, -0.38);
+                config.camera_vfov = 30;
+                break;
+
             case 10:
                 std::cout << "Based on Preset 10: bvh visual local area bvh-sah" << std::endl;
                 config.camera_lookfrom = vec3(0, 1, 0);
@@ -209,6 +218,8 @@ void parse_args(Config &config, int argc, char *argv[], int start)
             config.bvh_depth_visual = true;
             config.bvh_group_visual = false;
             config.bvh_depth_visual_h = std::stoi(argv[i + 1]);
+            if (config.bvh_depth_visual_h == 0)
+                config.bvh_depth_visual = false;
             i += 2;
         }
         else if (arg == "-bvg")
@@ -218,6 +229,8 @@ void parse_args(Config &config, int argc, char *argv[], int start)
             config.bvh_group_visual_h = std::stoi(argv[i + 1]);
             std::string s = argv[i + 2];
             config.bvh_group_visual_root = s == "." ? "" : s;
+            if (config.bvh_group_visual_h == 0)
+                config.bvh_group_visual_h = false;
             i += 3;
         }
         else if (arg == "-sah")
