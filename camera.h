@@ -52,7 +52,7 @@ public:
                     hit_record rec;
                     ray r = get_ray(i, j);
                     bool hit_anything = world.hit(r, interval(0.001, infinity), rec);
-                    current_samples_per_pixel = hit_anything ? rec.mat->apply_sample_rate(samples_per_pixel) : 1;
+                    current_samples_per_pixel = hit_anything ? rec.mat->apply_sample_rate(samples_per_pixel) : samples_per_pixel;
                 }
 
                 for (int sample = 0; sample < current_samples_per_pixel; sample++)
