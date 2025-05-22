@@ -35,7 +35,7 @@ public:
 
     int apply_sample_rate(int sample_num) const override
     {
-        sample_num = int(0.4 * sample_num);
+        sample_num = int(0.2 * sample_num);
         return std::max(1, sample_num);
     }
 

@@ -145,15 +145,6 @@ inline vec3 random_unit_vector()
     return vec3(x, y, z);
 }
 
-inline vec3 random_on_hemisphere(const vec3 &normal)
-{
-    vec3 on_unit_sphere = random_unit_vector();
-    if (on_unit_sphere.dot(normal) > 0.0) // In the same hemisphere as the normal
-        return on_unit_sphere;
-    else
-        return -on_unit_sphere;
-}
-
 inline vec3 reflect(const vec3 &v, const vec3 &n)
 {
     return v - 2 * v.dot(n) * n;

@@ -142,4 +142,6 @@ int main(int argc, char *argv[])
         cam.screen.save("output.png");
         cam.screen.display(1);
     }
+
+    cam.screen.display(0);
 }
