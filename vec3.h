@@ -1,15 +1,5 @@
 #ifndef VEC3_H
 #define VEC3_H
-//==============================================================================================
-// Originally written in 2016 by Peter Shirley <ptrshrl@gmail.com>
-//
-// To the extent possible under law, the author(s) have dedicated all copyright and related and
-// neighboring rights to this software to the public domain worldwide. This software is
-// distributed without any warranty.
-//
-// You should have received a copy (see file COPYING.txt) of the CC0 Public Domain Dedication
-// along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
-//==============================================================================================
 
 class vec3
 {
@@ -141,34 +131,18 @@ inline vec3 operator/(const vec3 &v, double t)
     return (1 / t) * v;
 }
 
-inline vec3 random_in_unit_disk()
-{
-    while (true)
-    {
-        auto p = vec3(random_double(-1, 1), random_double(-1, 1), 0);
-        if (p.length_squared() < 1)
-            return p;
-    }
-}
-
 inline vec3 random_unit_vector()
 {
-    while (true)
-    {
-        auto p = vec3::random(-1, 1);
-        auto lensq = p.length_squared();
-        if (1e-160 < lensq && lensq <= 1.0)
-            return p / sqrt(lensq);
-    }
-}
+    // 方法1：解析变换法（无循环，效率更高）
+    double theta = 2 * M_PI * random_double();  // 方位角 [0, 2π)
+    double phi = acos(1 - 2 * random_double()); // 极角 [0, π]
 
-inline vec3 random_on_hemisphere(const vec3 &normal)
-{
-    vec3 on_unit_sphere = random_unit_vector();
-    if (on_unit_sphere.dot(normal) > 0.0) // In the same hemisphere as the normal
-        return on_unit_sphere;
-    else
-        return -on_unit_sphere;
+    double sin_phi = sin(phi);
+    double x = sin_phi * cos(theta);
+    double y = sin_phi * sin(theta);
+    double z = cos(phi);
+
+    return vec3(x, y, z);
 }
 
 inline vec3 reflect(const vec3 &v, const vec3 &n)

@@ -21,6 +21,7 @@ struct Config
     int bvh_group_visual_h = 20;            //
     bool use_openmp = true;                 // -mp
     bool ci = false;                        // -ci
+    bool use_sample_rate = true;            // -sr
     bool bvh_sah = true;
     bool help = false;
 };
@@ -31,19 +32,20 @@ void print_help()
     std::cout << "Usage: ./main [options]\n"
               << "Options:\n"
               << std::left
-              << "  " << std::setw(8) << "-h" << "Show this help message\n"
-              << "  " << std::setw(8) << "-v N" << "Set cam vfov (default: 20)\n"
-              << "  " << std::setw(8) << "-d N" << "Set depth (default: 20)\n"
-              << "  " << std::setw(8) << "-sa N" << "Set sample number (default: 10)\n"
-              << "  " << std::setw(8) << "-rd N" << "Set rotate degree (default: 0)\n"
-              << "  " << std::setw(8) << "-c0 x y z" << "Set camera look from (default: 0 1 0)\n"
-              << "  " << std::setw(8) << "-c1 x y z" << "Set camera look at (default: -1 1 0)\n"
-              << "  " << std::setw(8) << "-i N" << "Use preset configuration N (default: -1)\n"
-              << "  " << std::setw(8) << "-bvd N" << "Enable BVH depth visualization and set depth\n"
-              << "  " << std::setw(8) << "-bvg <str> N" << "Enable BVH group visualization and set root and depth\n"
-              << "  " << std::setw(8) << "-sah 0" << "Disable BVH SAH algorithm\n"
-              << "  " << std::setw(8) << "-mp 0" << "Disable OpenMP\n"
-              << "  " << std::setw(8) << "-ci" << "Enable continuous input\n";
+              << "  " << std::setw(16) << "-h" << "Show this help message\n"
+              << "  " << std::setw(16) << "-v N" << "Set cam vfov\n"
+              << "  " << std::setw(16) << "-d N" << "Set depth\n"
+              << "  " << std::setw(16) << "-sa N" << "Set sample number\n"
+              << "  " << std::setw(16) << "-rd N" << "Set rotate degree\n"
+              << "  " << std::setw(16) << "-c0 x y z" << "Set camera look from\n"
+              << "  " << std::setw(16) << "-c1 x y z" << "Set camera look at\n"
+              << "  " << std::setw(16) << "-i N" << "Use preset configuration N\n"
+              << "  " << std::setw(16) << "-bvd N" << "Enable BVH depth visualization and set depth\n"
+              << "  " << std::setw(16) << "-bvg <str> N" << "Enable BVH group visualization and set root and depth\n"
+              << "  " << std::setw(16) << "-sah 0" << "Disable BVH SAH algorithm\n"
+              << "  " << std::setw(16) << "-mp 0" << "Disable OpenMP\n"
+              << "  " << std::setw(16) << "-ci" << "Enable continuous input\n"
+              << "  " << std::setw(16) << "-sr 0" << "Disable dynamic sample rate\n";
 }
 
 void show_config(Config config)
@@ -52,6 +54,7 @@ void show_config(Config config)
     std::cout << "Current configuration:\n"
               << "    Depth: " << config.max_depth << "\n"
               << "    Samples: " << config.sample_num << "\n"
+              << "        Dynamic sample rate: " << (config.use_sample_rate ? "ON " : "OFF ") << "\n"
               << "    Rotation: " << config.rotate_degree << " degrees\n"
               << "    Camera: " << "\n"
               << "        Look from: " << config.camera_lookfrom << "\n"
@@ -83,6 +86,12 @@ void parse_args(Config &config, int argc, char *argv[], int start)
             config.sample_num = std::stoi(argv[i + 1]);
             i += 2;
         }
+        else if (arg == "-sr")
+        {
+            config.use_sample_rate = std::stoi(argv[i + 1]);
+            i += 2;
+        }
+
         else if (arg == "-ci")
         {
             config.ci = true;
@@ -150,63 +159,25 @@ void parse_args(Config &config, int argc, char *argv[], int start)
 
             switch (config.preset_id)
             {
-            // local area sah
             case 0:
-                std::cout << "Based on Preset 0: local area bvh-sah" << std::endl;
-                config.camera_lookfrom = vec3(0, 1, 0);
-                config.camera_lookat = vec3(-1, 1, 0);
-                config.camera_vfov = 60;
-                break;
-
-            // overall middle
-            case 1:
-                std::cout << "Based on Preset 1: overall bvh-middle" << std::endl;
-                config.camera_lookfrom = vec3(7, 6, 5);
-                config.camera_lookat = vec3(-1, 0.5, -0.5);
-                config.camera_vfov = 20;
-                config.bvh_sah = false;
-                break;
-
-            // overall sah
-            case 2:
-                std::cout << "Based on Preset 2: overall bvh-sah" << std::endl;
-                config.camera_lookfrom = vec3(7, 6, 5);
-                config.camera_lookat = vec3(-1, 0.5, -0.5);
-                config.camera_vfov = 20;
-                break;
-
-            case 3:
-                std::cout << "Based on Preset 3: laptop" << std::endl;
+                std::cout << "Based on Preset 0: laptop" << std::endl;
                 config.camera_lookfrom = vec3(-0.45, 1, -0.3);
                 config.camera_lookat = vec3(-0.8, 0.9, -0.38);
                 config.camera_vfov = 30;
                 break;
 
-            case 10:
-                std::cout << "Based on Preset 10: bvh visual local area bvh-sah" << std::endl;
+            case 1:
+                std::cout << "Based on Preset 1: overall bvh-sah" << std::endl;
+                config.camera_lookfrom = vec3(7, 6, 5);
+                config.camera_lookat = vec3(-1, 0.5, -0.5);
+                config.camera_vfov = 20;
+                break;
+
+            case 2:
+                std::cout << "Based on Preset 2: local area bvh-sah" << std::endl;
                 config.camera_lookfrom = vec3(0, 1, 0);
                 config.camera_lookat = vec3(-1, 1, 0);
                 config.camera_vfov = 60;
-                config.sample_num = 50;
-                break;
-
-            // bvh visual middle
-            case 11:
-                std::cout << "Based on Preset 11: bvh visual bvh-middle" << std::endl;
-                config.camera_lookfrom = vec3(7, 6, 5);
-                config.camera_lookat = vec3(-1, 0.5, -0.5);
-                config.camera_vfov = 20;
-                config.sample_num = 50;
-                config.bvh_sah = false;
-                break;
-
-            // bvh visual sah
-            case 12:
-                std::cout << "Based on Preset 12: bvh visual bvh-sah" << std::endl;
-                config.camera_lookfrom = vec3(7, 6, 5);
-                config.camera_lookat = vec3(-1, 0.5, -0.5);
-                config.camera_vfov = 20;
-                config.sample_num = 50;
                 break;
 
             default:

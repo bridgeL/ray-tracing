@@ -74,7 +74,7 @@ public:
         right = make_shared<BVHNode>(src_objects, split_pos, end,
                                      max_leaf_size, split_method,
                                      depth + 1, path + "1");
-    }
+   }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
