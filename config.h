@@ -1,10 +1,12 @@
-#include <iostream>
-#include <string>
-#include <unordered_map>
-#include <stdexcept>
-#include <iomanip>
+#ifndef CONFIG_H
+#define CONFIG_H
 
-// 配置结构体
+#include <iostream>
+#include <vector>
+#include <string>
+#include "vec3.h"
+
+// Configuration structure
 struct Config
 {
     int camera_vfov = 20;                   // -v
@@ -26,7 +28,7 @@ struct Config
     bool help = false;
 };
 
-// 打印帮助信息
+// Print help message
 void print_help()
 {
     std::cout << "Usage: ./main [options]\n"
@@ -50,7 +52,7 @@ void print_help()
 
 void show_config(Config config)
 {
-    // 使用配置参数
+    // Display current configuration
     std::cout << "Current configuration:\n"
               << "    Depth: " << config.max_depth << "\n"
               << "    Samples: " << config.sample_num << "\n"
@@ -68,7 +70,7 @@ void show_config(Config config)
               << "    Continuous input: " << (config.ci ? "ON " : "OFF ") << "\n";
 }
 
-// 解析命令行参数
+// Parse command line arguments
 void parse_args(Config &config, int argc, char *argv[], int start)
 {
     for (int i = start; i < argc;)
@@ -98,7 +100,7 @@ void parse_args(Config &config, int argc, char *argv[], int start)
             i++;
         }
 
-        // ci
+        // Handle continuous input for BVH group visualization
         else if (arg == "0" && config.ci && config.bvh_group_visual)
         {
             config.bvh_group_visual_root += "0";
@@ -115,7 +117,7 @@ void parse_args(Config &config, int argc, char *argv[], int start)
             i++;
         }
 
-        // vfov
+        // Handle view field of view
         else if (arg == "-v")
         {
             config.camera_vfov = std::stoi(argv[i + 1]);
@@ -217,24 +219,26 @@ void parse_args(Config &config, int argc, char *argv[], int start)
     }
 }
 
-// 将 cin 输入拆分为 argv 格式
+// Parse cin input into argv format
 void parse_cin_input(Config &config)
 {
     std::string line;
-    std::getline(std::cin, line); // 读取整行输入
+    std::getline(std::cin, line); // Read entire line
 
-    // 拆分输入为单词（类似命令行参数）
+    // Split input into tokens (similar to command line args)
     std::vector<std::string> tokens;
     std::istringstream iss(line);
     std::string token;
     while (iss >> token)
         tokens.push_back(token);
 
-    // 转换为 argc 和 argv 格式
+    // Convert to argc and argv format
     std::vector<char *> argv;
     for (auto &token : tokens)
         argv.push_back(const_cast<char *>(token.c_str()));
 
-    // 调用 parse_args
+    // Call parse_args
     parse_args(config, argv.size(), argv.data(), 0);
 }
+
+#endif

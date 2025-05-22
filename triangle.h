@@ -8,10 +8,10 @@
 class vertex
 {
 public:
-    vec3 pos;
-    double u;
-    double v;
-    vec3 normal;
+    vec3 pos;    // Vertex position
+    double u;    // Texture coordinate u
+    double v;    // Texture coordinate v
+    vec3 normal; // Vertex normal
 
     vertex() {}
     vertex(const vec3 &pos) : pos(pos), u(-1), v(-1), normal(vec3(0, 0, 0)) {}
@@ -38,10 +38,10 @@ std::ostream &operator<<(std::ostream &os, vertex v)
 class triangle : public hittable
 {
 public:
-    vertex vertices[3];
-    vec3 normal;
-    shared_ptr<material> mat;
-    bbox b;
+    vertex vertices[3]; // Triangle vertices
+    vec3 normal;        // Face normal
+    shared_ptr<material> mat; // Material
+    bbox b;             // Bounding box
 
     triangle(
         const vertex &p0,
@@ -76,22 +76,22 @@ public:
         vec3 v2 = p1 - p3;
         double d = normal.dot(r.direction());
 
-        // 排除平行情况
+        // Exclude parallel cases (ray parallel to triangle plane)
         if (abs(d) < 1e-16)
             return false;
 
         double t = normal.dot(p1 - r.origin()) / d;
 
-        // 判断光线是否已被阻挡
+        // Check if ray is already blocked
         if (!ray_t.contains(t))
             return false;
 
-        // 获取与平面的交点，判断是否在三角形内
+        // Get intersection point with plane and check if inside triangle
         vec3 p = r.at(t);
         if (!insideTriangle(p))
             return false;
 
-        // 记录相交情况
+        // Record intersection details
         rec.t = t;
         rec.p = p;
         rec.set_face_normal(r, normal);
@@ -120,7 +120,7 @@ public:
         return oss.str();
     }
 
-    // 包围盒计算
+    // Calculate bounding box
     void calculateBBox()
     {
         const vertex &p0 = vertices[0];
@@ -137,7 +137,7 @@ public:
             interval(std::min({zs[0], zs[1], zs[2]}), std::max({zs[0], zs[1], zs[2]})).pad(1e-8));
     }
 
-    // 法向量计算
+    // Calculate face normal
     void calculateNormal()
     {
         const vertex &p0 = vertices[0];
@@ -154,12 +154,12 @@ private:
         vec3 p2 = vertices[1].pos;
         vec3 p3 = vertices[2].pos;
 
-        // 计算向量
+        // Compute vectors
         vec3 v0 = p2 - p1;
         vec3 v1 = p3 - p1;
         vec3 v2 = p - p1;
 
-        // 计算叉积面积
+        // Compute cross product areas
         float d00 = v0.dot(v0);
         float d01 = v0.dot(v1);
         float d11 = v1.dot(v1);
@@ -168,9 +168,9 @@ private:
 
         float denom = d00 * d11 - d01 * d01;
 
-        // 防止除零
+        // Prevent division by zero
         if (denom == 0.0)
-            return vec3(-1, -1, -1); // 或者根据你的需求返回特殊值
+            return vec3(-1, -1, -1); // Return special value for invalid case
 
         float v = (d11 * d20 - d01 * d21) / denom;
         float w = (d00 * d21 - d01 * d20) / denom;
@@ -181,7 +181,7 @@ private:
 
     bool insideTriangle(const vec3 &p) const
     {
-        // 计算点p到三条边的叉积符号
+        // Compute cross products between point p and triangle edges
         vec3 p1 = vertices[0].pos;
         vec3 p2 = vertices[1].pos;
         vec3 p3 = vertices[2].pos;
@@ -190,12 +190,12 @@ private:
         vec3 c2 = (p - p2).cross(p3 - p2);
         vec3 c3 = (p - p3).cross(p1 - p3);
 
-        // 检查符号一致性（与法向量点积）
+        // Check sign consistency (dot product with normal)
         double dot1 = c1.dot(normal);
         double dot2 = c2.dot(normal);
         double dot3 = c3.dot(normal);
 
-        // 如果所有点积同号（包括等于0的情况，表示在边上）
+        // If all dot products have same sign (including zero for edge cases)
         return (dot1 >= 0 && dot2 >= 0 && dot3 >= 0) || (dot1 <= 0 && dot2 <= 0 && dot3 <= 0);
     }
 };

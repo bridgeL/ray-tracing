@@ -20,7 +20,7 @@ public:
         return false;
     }
 
-    // 采样比率
+    // Sample rate adjustment
     virtual int apply_sample_rate(int sample_num) const
     {
         return sample_num;
@@ -61,12 +61,12 @@ vec3 convert_int_to_color(int i, int n)
 {
     float phase = interval(0, n).clamp(i) * 4 / n;
     if (phase <= 1)
-        return vec3(0, phase * 1, 1); // 阶段1: 蓝 → 青
+        return vec3(0, phase * 1, 1); // Phase 1: Blue → Cyan
     if (phase <= 2)
-        return vec3(0, 1, (2 - phase) * 1); // 阶段2: 青 → 绿
+        return vec3(0, 1, (2 - phase) * 1); // Phase 2: Cyan → Green
     if (phase <= 3)
-        return vec3((phase - 2) * 1, 1, 0); // 阶段3: 绿 → 黄
-    return vec3(1, (4 - phase) * 1, 0);     // 阶段4: 黄 → 红
+        return vec3((phase - 2) * 1, 1, 0); // Phase 3: Green → Yellow
+    return vec3(1, (4 - phase) * 1, 0);     // Phase 4: Yellow → Red
 }
 
 class bvh_depth_visual_mat : public material
@@ -80,8 +80,8 @@ public:
     bool emit(const ray &r_in, const hit_record &rec, vec3 &emit_color)
         const override
     {
-        // 展示各个对象在bvh树中的深度
-        // 如果画面偏红，说明bvh tree的节点深度普遍超过 h/2
+        // Visualize object depth in BVH tree
+        // Reddish image indicates BVH tree nodes generally exceed h/2 depth
         emit_color = convert_int_to_color(rec.bvh_depth, h);
         return true;
     }
@@ -98,21 +98,21 @@ public:
     bool emit(const ray &r_in, const hit_record &rec, vec3 &emit_color)
         const override
     {
-        // 展示从指定起点 到 指定最大深度处，各个对象分组的情况
+        // Visualize object grouping from specified root to max depth
         int t1 = 0;
         int t2 = pow(2, h - root.length() + 1) - 2;
 
         if (rec.bvh_path.length() >= root.length())
         {
-            // 必须从指定起点开始
+            // Must start from specified root
             std::string prefix = rec.bvh_path.substr(0, root.length());
             if (prefix == root)
             {
-                // 截取剩余部分的字符串，但不超过最大探查深度
+                // Extract remaining path string, but not exceeding max depth
                 int n = rec.bvh_path.length();
                 std::string s = rec.bvh_path.substr(root.length(), std::min(n, h) - root.length());
 
-                // 计算映射
+                // Calculate mapping
                 t1 = binaryStringToInt2(s);
             }
         }
@@ -122,20 +122,20 @@ public:
     }
 
 private:
-    // s是固定同一长度的01字符串，将他一一对应映射到整数空间
+    // Convert fixed-length binary string to integer
     static int binaryStringToInt(const std::string &binaryStr)
     {
-        // 使用 std::bitset 解析二进制字符串
-        std::bitset<32> bits(binaryStr);          // 假设二进制字符串不超过 32 位
-        return static_cast<int>(bits.to_ulong()); // 转换为 unsigned long，再转 int
+        // Use std::bitset to parse binary string
+        std::bitset<32> bits(binaryStr);          // Assume binary string <= 32 bits
+        return static_cast<int>(bits.to_ulong()); // Convert to unsigned long, then to int
     }
 
-    // s是任意长度的01字符串，将他一一对应映射到整数空间
+    // Convert arbitrary-length binary string to integer
     static int binaryStringToInt2(const std::string &s)
     {
         int h = s.length();
-        int t0 = pow(2, h) - 2;        // 小于h长度的s，所有的可能数
-        int t1 = binaryStringToInt(s); // 等于h长度的s，到目前位置的可能数
+        int t0 = pow(2, h) - 2;        // All possibilities for strings shorter than h
+        int t1 = binaryStringToInt(s); // Current possibilities for strings of length h
         return t0 + t1;
     }
 };
@@ -216,7 +216,7 @@ private:
 
     static double reflectance(double cosine, double refraction_index)
     {
-        // Use Schlick's approximation for reflectance.
+        // Use Schlick's approximation for reflectance
         auto r0 = (1 - refraction_index) / (1 + refraction_index);
         r0 = r0 * r0;
         return r0 + (1 - r0) * std::pow((1 - cosine), 5);
@@ -236,26 +236,26 @@ public:
     {
         center = lookfrom;
 
-        // Determine viewport dimensions.
+        // Determine viewport dimensions
         auto theta = degrees_to_radians(vfov);
         auto h = std::tan(theta / 2);
         auto viewport_height = 2 * h * focus_dist;
         auto viewport_width = viewport_height * (double(image_width) / image_height);
 
-        // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
+        // Calculate u,v,w unit basis vectors for camera coordinate frame
         w = (lookfrom - lookat).normalized();
         u = vup.cross(w).normalized();
         v = w.cross(u);
 
-        // Calculate the vectors across the horizontal and down the vertical viewport edges.
-        vec3 viewport_u = viewport_width * u;   // Vector across viewport horizontal edge
-        vec3 viewport_v = viewport_height * -v; // Vector down viewport vertical edge
+        // Calculate vectors across viewport edges
+        vec3 viewport_u = viewport_width * u;   // Horizontal edge vector
+        vec3 viewport_v = viewport_height * -v; // Vertical edge vector
 
-        // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+        // Calculate pixel-to-pixel delta vectors
         pixel_delta_u = viewport_u / image_width;
         pixel_delta_v = viewport_v / image_height;
 
-        // Calculate the location of the upper left pixel.
+        // Calculate upper left pixel location
         auto viewport_upper_left = center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
     }
@@ -283,19 +283,17 @@ public:
 
 private:
     int image_height;           // Rendered image height
-    int image_width;            // Rendered image height
-    double pixel_samples_scale; // Color scale factor for a sum of pixel samples
+    int image_width;            // Rendered image width
+    double pixel_samples_scale; // Color scale factor for pixel samples
     vec3 center;                // Camera center
-    vec3 pixel00_loc;           // Location of pixel 0, 0
-    vec3 pixel_delta_u;         // Offset to pixel to the right
-    vec3 pixel_delta_v;         // Offset to pixel below
-    vec3 u, v, w;               // Camera frame basis vectors
+    vec3 pixel00_loc;          // Location of pixel (0, 0)
+    vec3 pixel_delta_u;        // Right pixel offset
+    vec3 pixel_delta_v;        // Down pixel offset
+    vec3 u, v, w;              // Camera frame basis vectors
 
     ray get_ray(int i, int j) const
     {
-        // Construct a camera ray and directed at a randomly
-        // sampled point around the pixel location i, j.
-
+        // Construct camera ray directed at random point around pixel (i,j)
         auto offset = sample_square();
         auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u) + ((j + offset.y()) * pixel_delta_v);
 
@@ -307,7 +305,7 @@ private:
 
     vec3 sample_square() const
     {
-        // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+        // Return random point in [-0.5,-0.5] to [0.5,0.5] unit square
         return vec3(random_double() - 0.5, random_double() - 0.5, 0);
     }
 };

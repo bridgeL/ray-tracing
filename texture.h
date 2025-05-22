@@ -32,7 +32,7 @@ class image_texture : public texture
 public:
     image_texture(const std::string &filename)
     {
-        std::string filepath = filename; // 在filename前添加"../"
+        std::string filepath = filename;
         image = cv::imread(filepath);
         if (image.empty())
         {
