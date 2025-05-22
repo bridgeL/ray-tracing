@@ -71,8 +71,6 @@ int main(int argc, char *argv[])
     cam.vfov = config.camera_vfov;
     cam.vup = vec3(0, 1, 0);
 
-    // cam.defocus_angle = 0.6;
-    cam.defocus_angle = 0;
     cam.focus_dist = 10.0;
 
     if (config.bvh_depth_visual)
@@ -95,7 +93,7 @@ int main(int argc, char *argv[])
     // rendering
     timer.start_timer("Render");
     cam.initialize();
-    cam.render(world, true, config.use_openmp);
+    cam.render(world, true, config.use_openmp, config.use_sample_rate);
     timer.stop_timer();
 
     cam.screen.save("output.png");
@@ -105,6 +103,13 @@ int main(int argc, char *argv[])
     {
         parse_cin_input(config);
         show_config(config);
+
+        if (config.help)
+        {
+            print_help();
+            continue;
+        }
+
         std::cout << "Objects number: " << world.objects.size() << std::endl;
         std::cout << "image size: " << cam.image_width << 'x' << cam.image_height << std::endl;
 
@@ -131,7 +136,7 @@ int main(int argc, char *argv[])
 
         timer.start_timer("Render");
         cam.initialize();
-        cam.render(world, true, config.use_openmp);
+        cam.render(world, true, config.use_openmp, config.use_sample_rate);
         timer.stop_timer();
 
         cam.screen.save("output.png");

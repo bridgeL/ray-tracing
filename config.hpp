@@ -21,6 +21,7 @@ struct Config
     int bvh_group_visual_h = 20;            //
     bool use_openmp = true;                 // -mp
     bool ci = false;                        // -ci
+    bool use_sample_rate = true;            // -sr
     bool bvh_sah = true;
     bool help = false;
 };
@@ -43,7 +44,8 @@ void print_help()
               << "  " << std::setw(8) << "-bvg <str> N" << "Enable BVH group visualization and set root and depth\n"
               << "  " << std::setw(8) << "-sah 0" << "Disable BVH SAH algorithm\n"
               << "  " << std::setw(8) << "-mp 0" << "Disable OpenMP\n"
-              << "  " << std::setw(8) << "-ci" << "Enable continuous input\n";
+              << "  " << std::setw(8) << "-ci" << "Enable continuous input\n"
+              << "  " << std::setw(8) << "-sr 0" << "Disable sample rate\n";
 }
 
 void show_config(Config config)
@@ -52,6 +54,7 @@ void show_config(Config config)
     std::cout << "Current configuration:\n"
               << "    Depth: " << config.max_depth << "\n"
               << "    Samples: " << config.sample_num << "\n"
+              << "        Sample rate: " << (config.use_sample_rate ? "ON " : "OFF ") << "\n"
               << "    Rotation: " << config.rotate_degree << " degrees\n"
               << "    Camera: " << "\n"
               << "        Look from: " << config.camera_lookfrom << "\n"
@@ -83,6 +86,12 @@ void parse_args(Config &config, int argc, char *argv[], int start)
             config.sample_num = std::stoi(argv[i + 1]);
             i += 2;
         }
+        else if (arg == "-sr")
+        {
+            config.use_sample_rate = std::stoi(argv[i + 1]);
+            i += 2;
+        }
+
         else if (arg == "-ci")
         {
             config.ci = true;
@@ -180,6 +189,13 @@ void parse_args(Config &config, int argc, char *argv[], int start)
                 config.camera_lookfrom = vec3(-0.45, 1, -0.3);
                 config.camera_lookat = vec3(-0.8, 0.9, -0.38);
                 config.camera_vfov = 30;
+                break;
+
+            case 4:
+                std::cout << "Based on Preset 4: desk" << std::endl;
+                config.camera_lookfrom = vec3(0, 0.7, 2);
+                config.camera_lookat = vec3(-1.1, 0.7, -0.5);
+                config.camera_vfov = 10;
                 break;
 
             case 10:

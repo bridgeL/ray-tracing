@@ -19,6 +19,12 @@ public:
     {
         return false;
     }
+
+    // 采样比率
+    virtual int apply_sample_rate(int sample_num) const
+    {
+        return sample_num;
+    }
 };
 
 class lambertian : public material
@@ -26,6 +32,12 @@ class lambertian : public material
 public:
     lambertian(const vec3 &albedo) : tex(make_shared<solid_color>(albedo)) {}
     lambertian(shared_ptr<texture> tex) : tex(tex) {}
+
+    int apply_sample_rate(int sample_num) const override
+    {
+        sample_num = int(0.4 * sample_num);
+        return std::max(1, sample_num);
+    }
 
     bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered)
         const override
@@ -133,6 +145,12 @@ class metal : public material
 public:
     metal(const vec3 &albedo, double fuzz) : tex(make_shared<solid_color>(albedo)), fuzz(fuzz) {}
     metal(shared_ptr<texture> tex, double fuzz) : tex(tex), fuzz(fuzz) {}
+
+    int apply_sample_rate(int sample_num) const override
+    {
+        sample_num = int(0.5 * sample_num);
+        return std::max(1, sample_num);
+    }
 
     bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered)
         const override
@@ -251,15 +269,9 @@ public:
             vec3 reflected = reflect(r_in.direction(), rec.normal);
             reflected = reflected.normalized() + (fuzz * random_unit_vector());
             scattered = ray(rec.p, reflected);
-            attenuation = vec3(1, 1, 1);
+            attenuation = vec3(0.1, 0.1, 0.1);
             return (scattered.direction().dot(rec.normal) > 0);
         }
-
-        vec3 scatter_direction = rec.normal + random_unit_vector();
-
-        // Catch degenerate scatter direction
-        if (scatter_direction.near_zero())
-            scatter_direction = rec.normal;
 
         int i = int((rec.u) * image_width);
         int j = int((1 - rec.v) * image_height);
@@ -281,7 +293,7 @@ private:
 
     ray get_ray(int i, int j) const
     {
-        // Construct a camera ray originating from the defocus disk and directed at a randomly
+        // Construct a camera ray and directed at a randomly
         // sampled point around the pixel location i, j.
 
         auto offset = sample_square();
