@@ -2,20 +2,22 @@
 
 ## Project Overview
 
-![img](doc/1.png)
-![img](doc/2.png)
-![img](doc/3.png)
-![img](doc/4.png)
-
 Our goal is to implement an optimized ray tracer based on **Ray Tracing in One Weekend** framework [^rtweekend], with:
 
 - **Core optimizations**:
   - BVH construction with surface area heuristic (SAH)
-  - Backface culling
-
-- *(OPTIONAL) Parallel acceleration* via OpenMP
+  - Parallel acceleration* via OpenMP
 
 [^rtweekend]: P. Shirley et al. *Ray Tracing in One Weekend*. GitHub, 2020. https://github.com/RayTracing/raytracing.github.io
+
+The room model comes from free3d [^free3d]
+
+[^free3d]: Isometric Room. https://free3d.com/3d-model/isometric-room-362653.html
+
+![img](doc/1.png)
+![img](doc/2.png)
+![img](doc/3.png)
+![img](doc/4.png)
 
 ---
 
@@ -33,7 +35,7 @@ sudo apt install libeigen3-dev
 mkdir build
 cd build
 cmake .. 
-make && ./main -i 2
+make && ./main -i 0 -sa 1000
 ```
 
 ## Technical Approach
@@ -51,13 +53,10 @@ make && ./main -i 2
 ### Optimization Pipeline
 
 1. **Pre-processing Stage**:
-   - Back-face culling for opaque objects:  
-     `Discard if n·d ≥ 0`  
-     *(where n is triangle normal, d is ray direction)*
    - BVH construction with SAH
 
 2. **Ray Tracing Stage**:
-   - *(OPTIONAL) Parallel ray batches* (OpenMP)
+   - Parallel ray batches (OpenMP)
 
 ---
 
@@ -65,6 +64,6 @@ make && ./main -i 2
 
 | Week | Tasks |
 |------|-------|
-| 1 | Base framework + OBJ loader + back-face culling |
+| 1 | Base framework + OBJ loader |
 | 2 | Complex models + BVH optimization |
-| 3 | *(OPTIONAL) Parallel acceleration* + interactive controls |
+| 3 | Parallel acceleration + interactive controls |
