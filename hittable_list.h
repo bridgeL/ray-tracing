@@ -28,25 +28,13 @@ public:
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override
     {
-        if (bvh_tree)
-            return bvh_tree->hit(r, ray_t, rec);
-
-        // 保留此方法，以对比性能
-        hit_record temp_rec;
-        bool hit_anything = false;
-        auto closest_so_far = ray_t.max;
-
-        for (const auto &object : objects)
+        if (!bvh_tree)
         {
-            if (object->hit(r, interval(ray_t.min, closest_so_far), temp_rec))
-            {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                rec = temp_rec;
-            }
+            std::cerr << "Error: BVH tree not created. Call create_bvh_tree() first." << std::endl;
+            return false;
         }
 
-        return hit_anything;
+        return bvh_tree->hit(r, ray_t, rec);
     }
 
     bbox get_bbox() const override

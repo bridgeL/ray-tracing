@@ -4,11 +4,11 @@
 #include "sphere.h"
 #include "timer.h"
 #include "objloader.h"
-#include "config.hpp"
+#include "config.h"
 
 int main(int argc, char *argv[])
 {
-// 检查 OpenMP 是否可用
+// Check if OpenMP is available
 #ifdef _OPENMP
     std::cout << "OpenMP enabled (max threads: " << omp_get_max_threads() << ")\n";
 #else
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     loader.read_obj_with_mtl("model/room/room.obj", "model/room/room.mtl");
     timer.stop_timer();
 
-    timer.start_timer("Tranformation");
+    timer.start_timer("Transformation");
     loader.set_rotate(config.rotate_degree, vec3(0, 1, 0));
     // loader.set_scale(0.9);
     // loader.set_translate(0.1, 0.1, 0);
@@ -59,10 +59,10 @@ int main(int argc, char *argv[])
     cam.samples_per_pixel = config.sample_num;
     cam.max_depth = config.max_depth;
 
-    // 黑色背景
+    // Black background
     cam.background_color = vec3(1, 1, 1);
 
-    // 高分辨率显示屏请调节此参数
+    // Adjust this parameter for high-resolution displays
     cam.screen_scale = 1.0;
     cam.screen_name = "image";
 
@@ -84,13 +84,13 @@ int main(int argc, char *argv[])
     std::cout << "Objects number: " << world.objects.size() << std::endl;
     std::cout << "image size: " << cam.image_width << 'x' << cam.image_height << std::endl;
 
-    // create bvh tree
+    // Create BVH tree
     bool sah = config.bvh_sah;
     timer.start_timer("BVH build");
     world.create_bvh_tree(5, sah ? BVHSplitMethod::SAH : BVHSplitMethod::MIDDLE);
     timer.stop_timer();
 
-    // rendering
+    // Rendering process
     timer.start_timer("Render");
     cam.initialize();
     cam.render(world, true, config.use_openmp, config.use_sample_rate);

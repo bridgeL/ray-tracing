@@ -13,7 +13,7 @@ public:
     bbox() {}
     bbox(const interval &x, const interval &y, const interval &z) : x(x), y(y), z(z) {}
 
-    // merge two bounding boxes
+    // Merge two bounding boxes
     bbox(const bbox &a, const bbox &b) : x(a.x, b.x), y(a.y, b.y), z(a.z, b.z) {}
 
     int longest_axis() const
@@ -32,18 +32,18 @@ public:
                            : z;
     }
 
-    // 计算包围盒的表面积
+    // Calculate surface area of the bounding box
     double surface_area() const
     {
         double dx = x.size();
         double dy = y.size();
         double dz = z.size();
 
-        // 表面积 = 2*(dx*dy + dx*dz + dy*dz)
+        // Surface area = 2*(dx*dy + dx*dz + dy*dz)
         return 2.0 * (dx * dy + dx * dz + dy * dz);
     }
 
-    // 射线相交检测
+    // Ray intersection test
     bool hit(const ray &r, interval ray_t) const
     {
         for (int i = 0; i < 3; i++)

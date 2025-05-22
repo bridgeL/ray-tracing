@@ -9,17 +9,17 @@
 #include "material.h"
 #include <Eigen/Eigen>
 
-// a simple obj loader that reads the mesh
+// A simple OBJ loader that reads mesh data
 class ObjLoader
 {
 public:
-    std::vector<vec3> v_list;
-    std::vector<vec3> vn_list;
-    std::vector<double> vt_u_list;
-    std::vector<double> vt_v_list;
-    std::map<std::string, shared_ptr<material>> materials; // textures
+    std::vector<vec3> v_list;  // Vertex positions
+    std::vector<vec3> vn_list;  // Vertex normals
+    std::vector<double> vt_u_list;  // Texture U coordinates
+    std::vector<double> vt_v_list;  // Texture V coordinates
+    std::map<std::string, shared_ptr<material>> materials; // Material/texture map
 
-    std::vector<shared_ptr<triangle>> triangles; // triangles
+    std::vector<shared_ptr<triangle>> triangles; // Triangle list
     ObjLoader() {}
 
     inline bool read_obj(const std::string &filename, const std::string &texturename)
@@ -39,10 +39,10 @@ public:
             return false;
         }
 
-        // read texture
+        // Read texture
         auto mat = make_shared<lambertian>(make_shared<image_texture>(texturepath));
 
-        // defalt values
+        // Default values
         v_list.push_back(vec3(0, 0, 0));
         vn_list.push_back(vec3(0, 0, 0));
         vt_u_list.push_back(0);
@@ -93,7 +93,7 @@ public:
                     vn_idx[i] = result[2];
                 }
 
-                // create triangle
+                // Create triangle
                 auto p0 = vertex(v_list[v_idx[0]], vt_u_list[vt_idx[0]], vt_v_list[vt_idx[0]], vn_list[vn_idx[0]]);
                 auto p1 = vertex(v_list[v_idx[1]], vt_u_list[vt_idx[1]], vt_v_list[vt_idx[1]], vn_list[vn_idx[1]]);
                 auto p2 = vertex(v_list[v_idx[2]], vt_u_list[vt_idx[2]], vt_v_list[vt_idx[2]], vn_list[vn_idx[2]]);
@@ -101,7 +101,7 @@ public:
                 auto tri = make_shared<triangle>(p0, p1, p2, mat);
                 triangles.push_back(tri);
 
-                // quad
+                // Handle quad faces (convert to two triangles)
                 std::string vert3;
                 if (iss >> vert3)
                 {
@@ -110,7 +110,7 @@ public:
                     auto vt_idx3 = result[1];
                     auto vn_idx3 = result[2];
 
-                    // create triangle
+                    // Create second triangle
                     auto p3 = vertex(v_list[v_idx3], vt_u_list[vt_idx3], vt_v_list[vt_idx3], vn_list[vn_idx3]);
 
                     auto tri2 = make_shared<triangle>(p2, p3, p0, mat);
@@ -123,7 +123,7 @@ public:
 
     bool read_obj_with_mtl(const std::string &objname, const std::string &mtlname)
     {
-        // pre-processing and file validation
+        // Pre-processing and file validation
         std::string objpath = "../" + objname;
         std::string mtlpath = "../" + mtlname;
         if (objpath.substr(objpath.size() - 4, 4) != ".obj")
@@ -148,7 +148,7 @@ public:
             return false;
         }
 
-        // read mtl file first
+        // Read MTL file first
         std::ifstream mtlfile(mtlpath);
         if (!mtlfile.is_open())
         {
@@ -174,22 +174,23 @@ public:
                 double r, b, g;
                 iss >> r >> g >> b;
                 auto mat = make_shared<lambertian>(vec3(r, g, b));
-                materials[matname] = mat; // read and put texture into map
+                materials[matname] = mat; // Store material in map
             }
             else if ("map_Kd" == prefix)
             {
                 iss >> texturepath;
                 auto mat = make_shared<lambertian>(make_shared<image_texture>(textureprefix + texturepath));
-                materials[matname] = mat; // read and put texture into map
+                materials[matname] = mat; // Store texture in map
             }
         }
 
-        // 自定义一个特殊的material： Material.magic
+        // Create a special material: Material.magic
         materials["Material.magic"] = make_shared<magic_mat>(
             vec3(7, 6, 5),
             vec3(-1, 0.5, -0.9),
             vec3(0, 1, 0),
             10, 10, 800, 600);
+        // Alternative magic material configuration (commented out):
         // materials["Material.magic"] = make_shared<magic_mat>(
         //     vec3(-0.45, 1, -0.3),
         //     vec3(-0.8, 0.9, -0.38),
@@ -198,15 +199,15 @@ public:
 
         materials["laptop"] = make_shared<metal>(vec3(0.1, 0.1, 0.1), 0.8);
 
-        // read obj file
-        // defalt values
+        // Read OBJ file
+        // Default values
         v_list.push_back(vec3(0, 0, 0));
         vn_list.push_back(vec3(0, 0, 0));
         vt_u_list.push_back(0);
         vt_v_list.push_back(0);
-        materials["default"] = make_shared<lambertian>(vec3(0.5, 0.5, 0.5)); // default material
+        materials["default"] = make_shared<lambertian>(vec3(0.5, 0.5, 0.5)); // Default material
 
-        std::string current_mat = "default"; // default material
+        std::string current_mat = "default"; // Current material
         while (std::getline(file, line))
         {
             std::istringstream iss(line);
@@ -251,12 +252,12 @@ public:
                     vn_idx[i] = result[2];
                 }
 
-                // create triangle
+                // Create triangle with current material
                 auto p0 = vertex(v_list[v_idx[0]], vt_u_list[vt_idx[0]], vt_v_list[vt_idx[0]], vn_list[vn_idx[0]]);
                 auto p1 = vertex(v_list[v_idx[1]], vt_u_list[vt_idx[1]], vt_v_list[vt_idx[1]], vn_list[vn_idx[1]]);
                 auto p2 = vertex(v_list[v_idx[2]], vt_u_list[vt_idx[2]], vt_v_list[vt_idx[2]], vn_list[vn_idx[2]]);
 
-                // MODIFIED: add material support
+                // MODIFIED: Add material support
                 shared_ptr<material> mat;
                 if (materials.find(current_mat) != materials.end())
                 {
@@ -269,7 +270,7 @@ public:
                 auto tri = make_shared<triangle>(p0, p1, p2, mat);
                 triangles.push_back(tri);
 
-                // quad
+                // Handle quad faces (convert to two triangles)
                 std::string vert3;
                 if (iss >> vert3)
                 {
@@ -278,7 +279,7 @@ public:
                     auto vt_idx3 = result[1];
                     auto vn_idx3 = result[2];
 
-                    // create triangle
+                    // Create second triangle
                     auto p3 = vertex(v_list[v_idx3], vt_u_list[vt_idx3], vt_v_list[vt_idx3], vn_list[vn_idx3]);
 
                     auto tri2 = make_shared<triangle>(p2, p3, p0, mat);
@@ -287,7 +288,7 @@ public:
             }
             else if ("usemtl" == prefix)
             {
-                iss >> current_mat; // update current material
+                iss >> current_mat; // Update current material
             }
         }
         return true;
@@ -296,19 +297,19 @@ public:
     // ######## Transformation Functions ########
     inline void set_translate(float x, float y, float z)
     {
-        // calculate the translation matrix and update transformation matrix
+        // Calculate translation matrix and update transformation matrix
         transformation = get_translation(Eigen::Vector3f(x, y, z)) * transformation;
     }
 
     inline void set_rotate(float angle, vec3 axis)
     {
-        // calculate the rotation matrix and and update transformation matrix
+        // Calculate rotation matrix and update transformation matrix
         transformation = get_rotation(angle, Eigen::Vector3f(axis[0], axis[1], axis[2])) * transformation;
     }
 
     inline void set_scale(float x, float y, float z)
     {
-        // calculate the scaling matrix and and update transformation matrix
+        // Calculate scaling matrix and update transformation matrix
         Eigen::Matrix4f scaling = Eigen::Matrix4f::Identity();
         scaling(0, 0) = x;
         scaling(1, 1) = y;
@@ -318,7 +319,7 @@ public:
 
     inline void set_scale(float scale)
     {
-        // calculate the scaling matrix and and update transformation matrix
+        // Calculate uniform scaling matrix and update transformation matrix
         Eigen::Matrix4f scaling = Eigen::Matrix4f::Identity();
         scaling(0, 0) = scale;
         scaling(1, 1) = scale;
@@ -328,35 +329,36 @@ public:
 
     inline void apply_transformation()
     {
-        // 遍历所有三角形
+        // Apply transformation to all triangles
         for (auto &tri : triangles)
         {
-            // 遍历三角形的三个顶点
+            // Transform each vertex of the triangle
             for (int i = 0; i < 3; i++)
             {
-                // 获取顶点坐标
+                // Get vertex position
                 vec3 &pos = tri->vertices[i].pos;
 
-                // 应用变换
+                // Apply transformation
                 Eigen::Vector4f a(pos.x(), pos.y(), pos.z(), 1.0);
                 a = transformation * a;
 
-                // 更新顶点坐标
+                // Update vertex position
                 pos = vec3(a[0], a[1], a[2]);
             }
 
-            // 重新计算三角形法向量和bounding box
+            // Recalculate triangle normal and bounding box
             tri->calculateBBox();
             tri->calculateNormal();
         }
 
+        // Reset transformation matrix to identity
         transformation = Eigen::Matrix4f::Identity();
     }
 
 private:
     Eigen::Matrix4f transformation = Eigen::Matrix4f::Identity();
 
-    // this function is defined for spliting three coordinates of a vertex in a face
+    // Parse vertex indices from face definition (v/vt/vn format)
     std::vector<int> parse(const std::string &s)
     {
         std::vector<int> result;
@@ -375,12 +377,12 @@ private:
         return result;
     };
 
-    // these helper functions are modified from HW1 codes
+    // Helper functions for transformation matrices (modified from HW1 codes)
     Eigen::Matrix4f get_translation(const Eigen::Vector3f &translation)
     {
-        // Calculate a transformation matrix of given translation vector.
+        // Create translation matrix from given vector
         Eigen::Matrix4f trans = Eigen::Matrix4f::Identity();
-        trans.block<3, 1>(0, 3) = translation.transpose(); // put translation value into the last column
+        trans.block<3, 1>(0, 3) = translation.transpose(); // Set translation components
 
         return trans;
     }
@@ -389,24 +391,24 @@ private:
     {
         Eigen::Matrix4f rotation_matrix = Eigen::Matrix4f::Identity();
 
-        Eigen::Vector3f norm_vector = axis.normalized(); // normalize the axises
+        Eigen::Vector3f norm_vector = axis.normalized(); // Normalize rotation axis
         float nx = norm_vector.x();
         float ny = norm_vector.y();
-        float nz = norm_vector.z(); // x, y, z value of the normalized axis
+        float nz = norm_vector.z(); // Components of normalized axis
 
-        float rad = rotation_angle * 3.1415 / 180.0; // convert the angle from degree to radian
+        float rad = rotation_angle * 3.1415 / 180.0; // Convert angle to radians
         float cos = std::cos(rad);                   // cos(theta)
         float sin = std::sin(rad);                   // sin(theta)
         float omc = 1.0 - cos;                       // 1 - cos(theta)
 
-        // put rotation parameters into the matrix
+        // Build rotation matrix components
         Eigen::Matrix3f rotation;
         rotation << cos + nx * nx * omc, nx * ny * omc - nz * sin, nx * nz * omc + ny * sin,
             ny * nx * omc + nz * sin, cos + ny * ny * omc, ny * nz * omc - nx * sin,
             nz * nx * omc - ny * sin, nz * ny * omc + nx * sin, cos + nz * nz * omc;
 
-        // convert the rotation matrix into homogeneous matrix and return
-        rotation_matrix.block<3, 3>(0, 0) = rotation; // replace the upper left 3*3 block
+        // Convert to homogeneous coordinates and return
+        rotation_matrix.block<3, 3>(0, 0) = rotation; // Set rotation components
 
         return rotation_matrix;
     }

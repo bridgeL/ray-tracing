@@ -35,7 +35,8 @@ public:
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++)
             {
-                // 展示一条渐变色带，帮助我们分析bvh tree到底有多深，各个像素点又是位于多深的位置被命中的
+                // Display a color gradient strip to help analyze BVH tree depth
+                // and see at what depth each pixel was hit
                 if (j < 10)
                 {
                     screen.set_color(i, j, convert_int_to_color(i, image_width));
@@ -47,7 +48,7 @@ public:
 
                 if (use_sample_rate)
                 {
-                    // get first hit
+                    // Get first hit to determine sample rate
                     hit_record rec;
                     ray r = get_ray(i, j);
                     bool hit_anything = world.hit(r, interval(0.001, infinity), rec);
@@ -97,7 +98,7 @@ public:
         auto viewport_upper_left = center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-        // create screen
+        // Create screen buffer
         screen = Screen(image_width, image_height, screen_scale, screen_name);
         screen.clear();
     }
@@ -111,9 +112,7 @@ private:
 
     ray get_ray(int i, int j) const
     {
-        // Construct a camera ray and directed at a randomly
-        // sampled point around the pixel location i, j.
-
+        // Construct a camera ray directed at a randomly sampled point around pixel (i,j)
         auto offset = sample_square();
         auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u) + ((j + offset.y()) * pixel_delta_v);
 
@@ -125,13 +124,13 @@ private:
 
     vec3 sample_square() const
     {
-        // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+        // Returns a random point in the [-0.5,-0.5] to [0.5,0.5] unit square
         return vec3(random_double() - 0.5, random_double() - 0.5, 0);
     }
 
     vec3 ray_color(const ray &r, int depth, const hittable_list &world) const
     {
-        // If we've exceeded the ray bounce limit, no more light is gathered.
+        // If we've exceeded the ray bounce limit, no more light is gathered
         if (depth <= 0)
             return vec3(0, 0, 0);
 
